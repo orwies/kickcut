@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables (contain secrets)
+.env
+**/.env
+
+# TLS private key (never commit this)
+certs/key.pem
+
+# Uploaded files
+server/uploads/
+
+# JSON database files (local data)
+storage-server/data/
+
+# Build output
+client/dist/
+client/.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

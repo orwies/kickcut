@@ -1,0 +1,75 @@
+/**
+ * ws.js – Singleton WebSocket connection manager.
+ * Connects to /ws?token=... which Vite proxies to wss://localhost:3443/ws
+ */
+
+let socket = null;
+const listeners = new Map(); // event type → Set of callbacks
+
+function getWSUrl(token) {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
+}
+
+export function connect(token) {
+  if (socket && socket.readyState === WebSocket.OPEN) return;
+
+  socket = new WebSocket(getWSUrl(token));
+
+  socket.addEventListener('open', () => {
+    console.log('[WS] Connected');
+    emit('__connected', null);
+  });
+
+  socket.addEventListener('message', (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      emit(msg.type, msg.data ?? msg);
+    } catch {
+      /* ignore malformed */
+    }
+  });
+
+  socket.addEventListener('close', () => {
+    console.log('[WS] Disconnected');
+    emit('__disconnected', null);
+    socket = null;
+    // Auto-reconnect after 3 seconds if token still valid
+    const t = localStorage.getItem('kc_token');
+    if (t) setTimeout(() => connect(t), 3000);
+  });
+
+  socket.addEventListener('error', (err) => {
+    console.error('[WS] Error:', err);
+  });
+}
+
+export function disconnect() {
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
+}
+
+export function sendChat(text) {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: 'chat', text }));
+  }
+}
+
+export function subscribe(event, cb) {
+  if (!listeners.has(event)) listeners.set(event, new Set());
+  listeners.get(event).add(cb);
+}
+
+export function unsubscribe(event, cb) {
+  listeners.get(event)?.delete(cb);
+}
+
+function emit(event, data) {
+  listeners.get(event)?.forEach((cb) => cb(data));
+}
+
+export function isConnected() {
+  return socket?.readyState === WebSocket.OPEN;
+}
