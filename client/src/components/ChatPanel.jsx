@@ -41,9 +41,14 @@ export default function ChatPanel() {
     }
   }, [messages, open]);
 
-  // Real-time incoming messages
+  // Real-time incoming messages — only general channel (kickbot messages stay private)
   useWebSocket('chat_message', (msg) => {
-    setMessages((prev) => [...prev, msg]);
+    const ch = msg.channel || 'general';
+    if (ch !== 'general') return;
+    setMessages((prev) => {
+      if (prev.some((m) => m._id === msg._id)) return prev;
+      return [...prev, msg];
+    });
     if (!open) setUnread((n) => n + 1);
   });
 

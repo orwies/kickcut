@@ -32,13 +32,16 @@ try {
 }
 
 // ─── Worker Pool (thread per client pattern) ──────────────────────────────────
+// Capped at 4 workers: each worker holds one TCP connection to the storage server.
+// Using CPU count caused thread explosion (16+ threads × MongoDB connections = OOM).
 const pool = new WorkerPool(
   path.join(__dirname, 'workers', 'clientWorker.js'),
   {
     JWT_SECRET: process.env.JWT_SECRET,
     STORAGE_HOST: process.env.STORAGE_HOST || '127.0.0.1',
     STORAGE_PORT: process.env.STORAGE_PORT || '9000',
-  }
+  },
+  4  // fixed pool size: 4 workers, 4 TCP connections to storage server
 );
 
 // ─── Express App ──────────────────────────────────────────────────────────────

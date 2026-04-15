@@ -90,7 +90,7 @@ const handlers = {
     return tcp.send('FIND_PENDING_HIGHLIGHTS', {});
   },
 
-  async createHighlight({ homeTeam, awayTeam, competition, date, scoreHome, scoreAway, thumbnailPath, videoPath, uploadedBy }) {
+  async createHighlight({ homeTeam, awayTeam, competition, date, scoreHome, scoreAway, thumbnailPath, videoPath, uploadedBy, uploaderRole }) {
     const model = new HighlightModel({
       homeTeam: String(homeTeam || '').trim(),
       awayTeam: String(awayTeam || '').trim(),
@@ -103,7 +103,7 @@ const handlers = {
       thumbnailPath: thumbnailPath || '',
       videoPath: videoPath || '',
       uploadedBy,
-      status: 'pending',
+      status: uploaderRole === 'admin' ? 'approved' : 'pending',
     });
     model.validate();
     return tcp.send('CREATE_HIGHLIGHT', model.toObject());
@@ -124,16 +124,19 @@ const handlers = {
     return tcp.send('DELETE_HIGHLIGHT', { id: String(id) });
   },
 
-  async getChatMessages() {
-    return tcp.send('FIND_CHAT_MESSAGES', { limit: 50 });
+  async getChatMessages({ channel = 'general', userId } = {}) {
+    return tcp.send('FIND_CHAT_MESSAGES', { channel, userId: userId ? String(userId) : undefined, limit: 50 });
   },
 
-  async createChatMessage({ userId, username, text }) {
+  async createChatMessage({ userId, username, text, channel = 'general', isBot = false, ownerId = null }) {
     if (!text || !String(text).trim()) throw { status: 400, message: 'Message text is required' };
     return tcp.send('CREATE_CHAT_MESSAGE', {
       userId: String(userId),
       username: String(username),
       text: String(text).trim().substring(0, 500),
+      channel,
+      isBot: Boolean(isBot),
+      ownerId: ownerId ? String(ownerId) : String(userId),
     });
   },
 };

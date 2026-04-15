@@ -12,7 +12,10 @@ function getWSUrl(token) {
 }
 
 export function connect(token) {
-  if (socket && socket.readyState === WebSocket.OPEN) return;
+  // Guard against both OPEN (1) and CONNECTING (0) — was only checking OPEN,
+  // which caused a second socket to be created while the first was still connecting,
+  // resulting in every message being received and emitted twice.
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
 
   socket = new WebSocket(getWSUrl(token));
 
@@ -52,8 +55,12 @@ export function disconnect() {
 }
 
 export function sendChat(text) {
+  sendWS({ type: 'chat', channel: 'general', text });
+}
+
+export function sendWS(payload) {
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: 'chat', text }));
+    socket.send(JSON.stringify(payload));
   }
 }
 

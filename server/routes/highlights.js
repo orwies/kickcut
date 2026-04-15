@@ -73,6 +73,7 @@ router.post(
         thumbnailPath,
         videoPath,
         uploadedBy: req.user.id,
+        uploaderRole: req.user.role,  // admins skip the approval queue
       });
       res.status(201).json(result);
     } catch (err) {

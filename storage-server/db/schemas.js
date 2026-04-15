@@ -1,8 +1,6 @@
-'use strict';
-
+﻿'use strict';
 const mongoose = require('mongoose');
 
-// ─── User Schema ─────────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true, minlength: 3, maxlength: 30 },
   passwordHash: { type: String, required: true },
@@ -10,7 +8,6 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// ─── Highlight Schema ─────────────────────────────────────────────────────────
 const highlightSchema = new mongoose.Schema({
   homeTeam: { type: String, required: true, trim: true },
   awayTeam: { type: String, required: true, trim: true },
@@ -27,17 +24,17 @@ const highlightSchema = new mongoose.Schema({
   uploadedBy: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
-
-// Indexes for filtering performance
 highlightSchema.index({ competition: 1 });
 highlightSchema.index({ date: -1 });
 highlightSchema.index({ status: 1 });
 
-// ─── Chat Message Schema ──────────────────────────────────────────────────────
 const chatMessageSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   username: { type: String, required: true },
-  text: { type: String, required: true, maxlength: 500 },
+  text: { type: String, required: true, maxlength: 1000 },
+  channel: { type: String, enum: ['general', 'kickbot'], default: 'general' },
+  isBot: { type: Boolean, default: false },
+  ownerId: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

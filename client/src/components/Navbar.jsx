@@ -1,12 +1,18 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AdminPanel from './AdminPanel';
 import UploadForm from './UploadForm';
 
 export default function Navbar({ showToast }) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showAdmin, setShowAdmin] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+
+  const onFeed = location.pathname === '/';
+  const onChat = location.pathname === '/chat';
 
   return (
     <>
@@ -16,6 +22,24 @@ export default function Navbar({ showToast }) {
             <span className="logo-icon">⚽</span>
             <span><span className="logo-kick">Kick</span><span className="logo-cut">Cut</span></span>
           </a>
+
+          {/* Page tabs */}
+          <div className="navbar-tabs">
+            <button
+              id="nav-tab-feed"
+              className={`navbar-tab ${onFeed ? 'navbar-tab-active' : ''}`}
+              onClick={() => navigate('/')}
+            >
+              🎬 Highlights
+            </button>
+            <button
+              id="nav-tab-chat"
+              className={`navbar-tab ${onChat ? 'navbar-tab-active' : ''}`}
+              onClick={() => navigate('/chat')}
+            >
+              💬 Chat
+            </button>
+          </div>
 
           <div className="navbar-right">
             {user?.role === 'admin' && (
@@ -55,7 +79,10 @@ export default function Navbar({ showToast }) {
       {showUpload && (
         <UploadForm
           onClose={() => setShowUpload(false)}
-          onSuccess={() => { setShowUpload(false); showToast('Highlight submitted for review!'); }}
+          onSuccess={() => {
+            setShowUpload(false);
+            showToast(user?.role === 'admin' ? 'Highlight published!' : 'Highlight submitted for review!');
+          }}
           showToast={showToast}
         />
       )}

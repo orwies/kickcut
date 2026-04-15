@@ -53,7 +53,8 @@ export const deleteHighlight = (id) =>
   api.delete(`/highlights/${id}`).then((r) => r.data);
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────
-export const getChatMessages = () =>
-  api.get('/chat/messages').then((r) => r.data);
+export const getChatMessages = (channel = 'general') =>
+  api.get('/chat/messages', { params: { channel } }).then((r) => r.data);
+
 
 export default api;

@@ -1,64 +1,70 @@
 'use strict';
 
-const db = require('../db/jsonDb');
+const { Highlight } = require('../db/schemas');
+
+// Converts _id ObjectId to plain string so it survives TCP JSON serialization
+function serialize(doc) {
+  if (!doc) return doc;
+  if (Array.isArray(doc)) return doc.map(serialize);
+  const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
+  if (obj._id) obj._id = obj._id.toString();
+  return obj;
+}
 
 async function handleHighlightsRequest(type, payload) {
   switch (type) {
     case 'CREATE_HIGHLIGHT': {
-      return db.create('highlights', payload);
+      const h = await Highlight.create(payload);
+      return serialize(h);
     }
 
     case 'FIND_HIGHLIGHTS': {
-      const status = payload.status || 'approved';
-      const results = db.find('highlights', (h) => {
-        if (h.status !== status) return false;
-        if (payload.competition && !h.competition.toLowerCase().includes(payload.competition.toLowerCase())) return false;
-        if (payload.homeTeam && !h.homeTeam.toLowerCase().includes(payload.homeTeam.toLowerCase())) return false;
-        if (payload.awayTeam && !h.awayTeam.toLowerCase().includes(payload.awayTeam.toLowerCase())) return false;
-        if (payload.dateFrom && new Date(h.date) < new Date(payload.dateFrom)) return false;
-        if (payload.dateTo && new Date(h.date) > new Date(payload.dateTo)) return false;
-        return true;
-      });
-      results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      return results;
+      const query = { status: payload.status || 'approved' };
+      if (payload.competition) query.competition = new RegExp(payload.competition, 'i');
+      if (payload.homeTeam)    query.homeTeam    = new RegExp(payload.homeTeam, 'i');
+      if (payload.awayTeam)    query.awayTeam    = new RegExp(payload.awayTeam, 'i');
+      if (payload.dateFrom || payload.dateTo) {
+        query.date = {};
+        if (payload.dateFrom) query.date.$gte = new Date(payload.dateFrom);
+        if (payload.dateTo)   query.date.$lte = new Date(payload.dateTo);
+      }
+      const results = await Highlight.find(query).sort({ createdAt: -1 });
+      return serialize(results);
     }
 
     case 'FIND_PENDING_HIGHLIGHTS': {
-      const results = db.find('highlights', (h) => h.status === 'pending');
-      results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      return results;
+      const results = await Highlight.find({ status: 'pending' }).sort({ createdAt: -1 });
+      return serialize(results);
     }
 
     case 'UPDATE_HIGHLIGHT': {
       const { id, updates } = payload;
-      const safeUpdates = {};
+      const allowed = {};
       if (updates.status && ['pending', 'approved'].includes(updates.status)) {
-        safeUpdates.status = updates.status;
+        allowed.status = updates.status;
       }
-      const updated = db.updateById('highlights', id, safeUpdates);
+      const updated = await Highlight.findByIdAndUpdate(id, allowed, { new: true });
       if (!updated) throw new Error('Highlight not found');
-      return updated;
+      return serialize(updated);
     }
 
     case 'DELETE_HIGHLIGHT': {
-      const deleted = db.deleteById('highlights', payload.id);
+      const deleted = await Highlight.findByIdAndDelete(payload.id);
       if (!deleted) throw new Error('Highlight not found');
       return { deleted: true };
     }
 
     case 'LIKE_HIGHLIGHT': {
       const { id, userId } = payload;
-      const highlight = db.findOne('highlights', (h) => h._id === id);
-      if (!highlight) throw new Error('Highlight not found');
-
-      const likes = highlight.likes || [];
-      const alreadyLiked = likes.includes(userId);
-      const newLikes = alreadyLiked
-        ? likes.filter((l) => l !== userId)
-        : [...likes, userId];
-
-      const updated = db.replaceById('highlights', id, { ...highlight, likes: newLikes });
-      return updated;
+      const h = await Highlight.findById(id);
+      if (!h) throw new Error('Highlight not found');
+      if (h.likes.includes(userId)) {
+        h.likes.pull(userId);
+      } else {
+        h.likes.push(userId);
+      }
+      await h.save();
+      return serialize(h);
     }
 
     default:

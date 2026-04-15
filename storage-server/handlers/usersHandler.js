@@ -1,24 +1,31 @@
 'use strict';
 
-const db = require('../db/jsonDb');
+const { User } = require('../db/schemas');
+
+function serialize(doc) {
+  if (!doc) return doc;
+  const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
+  if (obj._id) obj._id = obj._id.toString();
+  return obj;
+}
 
 async function handleUsersRequest(type, payload) {
   switch (type) {
     case 'CREATE_USER': {
-      const existing = db.findOne('users', (u) => u.username === payload.username);
+      const existing = await User.findOne({ username: payload.username });
       if (existing) throw new Error('Username already taken');
-      const user = db.create('users', {
+      const user = await User.create({
         username: payload.username,
         passwordHash: payload.passwordHash,
         role: payload.role || 'user',
       });
-      return user;
+      return serialize(user);
     }
 
     case 'FIND_USER': {
-      const user = db.findOne('users', (u) => u.username === payload.username);
+      const user = await User.findOne({ username: payload.username });
       if (!user) throw new Error('User not found');
-      return user;
+      return serialize(user);
     }
 
     default:

@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import Navbar from './components/Navbar';
 import LoginPage from './components/LoginPage';
 import FeedPage from './components/FeedPage';
-import ChatPanel from './components/ChatPanel';
+import ChatPage from './components/ChatPage';
 import { useState } from 'react';
 
 function AppRoutes() {
@@ -33,10 +33,10 @@ function AppRoutes() {
       <main className="main-content">
         <Routes>
           <Route path="/" element={<FeedPage showToast={showToast} />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <ChatPanel />
       {toast && (
         <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>{toast.message}</div>
