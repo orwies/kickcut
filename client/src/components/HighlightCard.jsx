@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { likeHighlight } from '../api';
+import { likeHighlight, deleteHighlight } from '../api';
 import { useAuth } from '../hooks/useAuth';
 
 function formatDate(dateStr) {
@@ -8,7 +8,7 @@ function formatDate(dateStr) {
   });
 }
 
-export default function HighlightCard({ highlight, onLikeUpdate, showToast }) {
+export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showToast }) {
   const { user } = useAuth();
   const [liking, setLiking] = useState(false);
 
@@ -26,6 +26,18 @@ export default function HighlightCard({ highlight, onLikeUpdate, showToast }) {
       showToast(err.response?.data?.error || 'Failed to like', 'error');
     } finally {
       setLiking(false);
+    }
+  }
+
+  async function handleDelete(e) {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete ${highlight.homeTeam} vs ${highlight.awayTeam}?`)) return;
+    try {
+      await deleteHighlight(highlight._id);
+      if (onDelete) onDelete(highlight._id);
+      showToast('Highlight deleted permanently.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to delete highlight', 'error');
     }
   }
 
@@ -54,7 +66,9 @@ export default function HighlightCard({ highlight, onLikeUpdate, showToast }) {
           </div>
         )}
 
-        <div className="card-competition">{highlight.competition}</div>
+        <div className="card-competition">
+          {highlight.competition}{highlight.matchStage ? ` • ${highlight.matchStage}` : ''}
+        </div>
       </div>
 
       <div className="card-body">
@@ -71,8 +85,17 @@ export default function HighlightCard({ highlight, onLikeUpdate, showToast }) {
         </div>
 
         <div className="card-meta">
-          <span className="card-date">
+          <span className="card-date" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             📅 {highlight.date ? formatDate(highlight.date) : 'Unknown date'}
+            {user?.role === 'admin' && (
+              <button 
+                onClick={handleDelete} 
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff5555', fontSize: '1rem', padding: '0 4px' }}
+                title="Delete Highlight"
+              >
+                🗑️
+              </button>
+            )}
           </span>
 
           <button

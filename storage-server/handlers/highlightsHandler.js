@@ -21,6 +21,7 @@ async function handleHighlightsRequest(type, payload) {
     case 'FIND_HIGHLIGHTS': {
       const query = { status: payload.status || 'approved' };
       if (payload.competition) query.competition = new RegExp(payload.competition, 'i');
+      if (payload.matchStage)  query.matchStage  = new RegExp(payload.matchStage, 'i');
       if (payload.homeTeam)    query.homeTeam    = new RegExp(payload.homeTeam, 'i');
       if (payload.awayTeam)    query.awayTeam    = new RegExp(payload.awayTeam, 'i');
       if (payload.dateFrom || payload.dateTo) {

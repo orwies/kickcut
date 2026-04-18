@@ -14,6 +14,7 @@ const wsHub = require('./wsHub');
 const authRoutes = require('./routes/auth');
 const highlightsRoutes = require('./routes/highlights');
 const chatRoutes = require('./routes/chat');
+const widgetsRoutes = require('./routes/widgets');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
 const PORT = parseInt(process.env.PORT || '3443', 10);
@@ -80,6 +81,7 @@ app.use((req, _res, next) => {
 app.use('/auth', authRoutes);
 app.use('/highlights', highlightsRoutes);
 app.use('/chat', chatRoutes);
+app.use('/widgets', widgetsRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', workers: pool.size }));
 

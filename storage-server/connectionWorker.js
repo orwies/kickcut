@@ -18,7 +18,10 @@ const HIGHLIGHT_TYPES = new Set([
   'CREATE_HIGHLIGHT', 'FIND_HIGHLIGHTS', 'FIND_PENDING_HIGHLIGHTS',
   'UPDATE_HIGHLIGHT', 'DELETE_HIGHLIGHT', 'LIKE_HIGHLIGHT',
 ]);
-const CHAT_TYPES = new Set(['CREATE_CHAT_MESSAGE', 'FIND_CHAT_MESSAGES']);
+const CHAT_TYPES = new Set([
+  'CREATE_CHAT_MESSAGE', 'FIND_CHAT_MESSAGES',
+  'CREATE_CHANNEL', 'FIND_CHANNELS', 'DELETE_CHANNEL'
+]);
 
 async function processRequest(type, payload) {
   if (USER_TYPES.has(type))      return handleUsersRequest(type, payload);

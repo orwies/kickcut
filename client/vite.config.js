@@ -16,12 +16,22 @@ export default defineConfig({
         secure: false,
         changeOrigin: true,
       },
-      '/chat': {
+      '/chat/messages': {
+        target: 'https://localhost:3443',
+        secure: false,
+        changeOrigin: true,
+      },
+      '/chat/channels': {
         target: 'https://localhost:3443',
         secure: false,
         changeOrigin: true,
       },
       '/uploads': {
+        target: 'https://localhost:3443',
+        secure: false,
+        changeOrigin: true,
+      },
+      '/widgets': {
         target: 'https://localhost:3443',
         secure: false,
         changeOrigin: true,

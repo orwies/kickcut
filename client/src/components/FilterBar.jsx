@@ -7,6 +7,7 @@ const COMPETITIONS = [
 
 export default function FilterBar({ onFilter }) {
   const [competition, setCompetition] = useState('');
+  const [matchStage, setMatchStage] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
   const [awayTeam, setAwayTeam] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -14,11 +15,11 @@ export default function FilterBar({ onFilter }) {
 
   function handleApply(e) {
     e.preventDefault();
-    onFilter({ competition, homeTeam, awayTeam, dateFrom, dateTo });
+    onFilter({ competition, matchStage, homeTeam, awayTeam, dateFrom, dateTo });
   }
 
   function handleReset() {
-    setCompetition(''); setHomeTeam(''); setAwayTeam('');
+    setCompetition(''); setMatchStage(''); setHomeTeam(''); setAwayTeam('');
     setDateFrom(''); setDateTo('');
     onFilter({});
   }
@@ -39,6 +40,18 @@ export default function FilterBar({ onFilter }) {
                 <option key={c} value={c}>{c || 'All Competitions'}</option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="filter-matchStage">Match Stage/Week</label>
+            <input
+              id="filter-matchStage"
+              className="form-input"
+              type="text"
+              placeholder="e.g. Final"
+              value={matchStage}
+              onChange={(e) => setMatchStage(e.target.value)}
+            />
           </div>
 
           <div className="form-group">

@@ -74,10 +74,11 @@ const handlers = {
     return { user: user.toSafeObject() };
   },
 
-  async getHighlights({ status, competition, dateFrom, dateTo, homeTeam, awayTeam }) {
+  async getHighlights({ status, competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam }) {
     const highlights = await tcp.send('FIND_HIGHLIGHTS', {
       status: status || 'approved',
       competition: competition ? String(competition).trim() : undefined,
+      matchStage: matchStage ? String(matchStage).trim() : undefined,
       homeTeam: homeTeam ? String(homeTeam).trim() : undefined,
       awayTeam: awayTeam ? String(awayTeam).trim() : undefined,
       dateFrom,
@@ -90,11 +91,12 @@ const handlers = {
     return tcp.send('FIND_PENDING_HIGHLIGHTS', {});
   },
 
-  async createHighlight({ homeTeam, awayTeam, competition, date, scoreHome, scoreAway, thumbnailPath, videoPath, uploadedBy, uploaderRole }) {
+  async createHighlight({ homeTeam, awayTeam, competition, matchStage, date, scoreHome, scoreAway, thumbnailPath, videoPath, uploadedBy, uploaderRole }) {
     const model = new HighlightModel({
       homeTeam: String(homeTeam || '').trim(),
       awayTeam: String(awayTeam || '').trim(),
       competition: String(competition || '').trim(),
+      matchStage: String(matchStage || '').trim(),
       date,
       score: {
         home: Math.max(0, parseInt(scoreHome, 10) || 0),
@@ -138,6 +140,20 @@ const handlers = {
       isBot: Boolean(isBot),
       ownerId: ownerId ? String(ownerId) : String(userId),
     });
+  },
+
+  async FIND_CHANNELS() {
+    return tcp.send('FIND_CHANNELS', {});
+  },
+
+  async CREATE_CHANNEL(payload) {
+    if (!payload.id || !payload.label) throw { status: 400, message: 'Channel ID and Label required' };
+    return tcp.send('CREATE_CHANNEL', payload);
+  },
+
+  async DELETE_CHANNEL({ id }) {
+    if (!id) throw { status: 400, message: 'Channel ID required' };
+    return tcp.send('DELETE_CHANNEL', { id: String(id) });
   },
 };
 

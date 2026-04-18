@@ -13,16 +13,35 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const { competition, dateFrom, dateTo, homeTeam, awayTeam } = req.query;
+    const { competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam } = req.query;
     const result = await req.pool.dispatch('getHighlights', {
       status: 'approved',
       competition,
+      matchStage,
       dateFrom,
       dateTo,
       homeTeam,
       awayTeam,
     });
     res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /highlights/trending
+ * Return top 3 highlights sorted by likes.
+ */
+router.get('/trending', async (req, res) => {
+  try {
+    const result = await req.pool.dispatch('getHighlights', { status: 'approved' });
+    result.sort((a, b) => {
+      const aLikes = Array.isArray(a.likes) ? a.likes.length : 0;
+      const bLikes = Array.isArray(b.likes) ? b.likes.length : 0;
+      return bLikes - aLikes;
+    });
+    res.json(result.slice(0, 3));
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -54,7 +73,7 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { homeTeam, awayTeam, competition, date, scoreHome, scoreAway } = req.body;
+      const { homeTeam, awayTeam, competition, matchStage, date, scoreHome, scoreAway } = req.body;
 
       const thumbnailPath = req.files?.thumbnail?.[0]
         ? `/uploads/thumbnails/${req.files.thumbnail[0].filename}`
@@ -67,6 +86,7 @@ router.post(
         homeTeam,
         awayTeam,
         competition,
+        matchStage,
         date,
         scoreHome,
         scoreAway,

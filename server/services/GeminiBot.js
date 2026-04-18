@@ -28,8 +28,8 @@ class GeminiBot {
     const maxRetries = 3;
     const baseDelay = 1000;
     
-    // Ordered list of models to try. If one is busy/banned, try the next.
-    const fallbackModels = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-pro-latest'];
+    // Ordered list of models. 1.5-flash-8b has higher free quotas.
+    const fallbackModels = ['gemini-1.5-flash-8b', 'gemini-1.5-flash'];
 
     for (const modelName of fallbackModels) {
       const activeModel = this.genAI.getGenerativeModel({

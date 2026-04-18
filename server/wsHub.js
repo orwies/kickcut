@@ -34,7 +34,7 @@ function init(httpsServer, pool) {
       }
 
       if (msg.type === 'chat' && msg.text) {
-        const channel = msg.channel === 'kickbot' ? 'kickbot' : 'general';
+        const channel = msg.channel || 'general';
 
         if (channel === 'kickbot') {
           // Private — only the requesting user sees this conversation
@@ -62,13 +62,22 @@ function init(httpsServer, pool) {
             });
           }
         } else {
-          // General — broadcast to everyone
+          // General / Dynamic channel
           try {
+            if (channel !== 'general') {
+              const allChannels = await _pool.dispatch('FIND_CHANNELS', {});
+              const ch = allChannels.find(c => c.id === channel);
+              if (!ch) throw new Error('Channel not found');
+              if (ch.adminOnly && user.role !== 'admin') {
+                throw new Error('Admin only channel');
+              }
+            }
+
             const userMsg = await _pool.dispatch('createChatMessage', {
               userId: user.id, username: user.username,
-              text: msg.text, channel: 'general', ownerId: user.id,
+              text: msg.text, channel, ownerId: user.id,
             });
-            broadcast('chat_message', userMsg);
+            broadcast('chat_message', userMsg, channel);
           } catch (err) {
             ws.send(JSON.stringify({ type: 'error', error: err.message }));
           }
@@ -76,9 +85,15 @@ function init(httpsServer, pool) {
       }
     });
 
-    ws.on('close', () => console.log('[WS] ' + user.username + ' disconnected'));
+    ws.on('close', () => {
+      console.log('[WS] ' + user.username + ' disconnected');
+      broadcastOnlineUsers();
+    });
     ws.on('error', (err) => console.error('[WS] Error:', err.message));
     ws.send(JSON.stringify({ type: 'connected', message: 'Welcome, ' + user.username + '!' }));
+    
+    // Broadcast updated list to everyone
+    broadcastOnlineUsers();
   });
 
   const pingInterval = setInterval(() => {
@@ -92,12 +107,38 @@ function sendTo(ws, type, data) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type, data }));
 }
 
-function broadcast(type, data) {
+function broadcast(type, data, channelId) {
   if (!_wss) return;
   const msg = JSON.stringify({ type, data });
-  _wss.clients.forEach((c) => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
+
+  // Optimistically broadcast, but fetch channels in background for permission check
+  _pool.dispatch('FIND_CHANNELS', {}).then(allChannels => {
+    const ch = allChannels?.find(c => c.id === channelId);
+    _wss.clients.forEach((c) => {
+      if (c.readyState === WebSocket.OPEN) {
+        c.send(msg);
+      }
+    });
+  }).catch(err => {
+    console.error('[WS] Broadcast check error:', err.message);
+  });
 }
 
 function getConnectedCount() { return _wss ? _wss.clients.size : 0; }
+
+function broadcastOnlineUsers() {
+  if (!_wss) return;
+  const usersMap = new Map();
+  _wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN && c.user) {
+      usersMap.set(c.user.username, { username: c.user.username, role: c.user.role });
+    }
+  });
+  const onlineList = Array.from(usersMap.values());
+  const msg = JSON.stringify({ type: 'online_users', data: onlineList });
+  _wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN) c.send(msg);
+  });
+}
 
 module.exports = { init, broadcast, getConnectedCount };

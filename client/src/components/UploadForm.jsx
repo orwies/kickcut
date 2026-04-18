@@ -8,7 +8,7 @@ const COMPETITIONS = [
 
 export default function UploadForm({ onClose, onSuccess, showToast }) {
   const [form, setForm] = useState({
-    homeTeam: '', awayTeam: '', competition: COMPETITIONS[0],
+    homeTeam: '', awayTeam: '', competition: COMPETITIONS[0], matchStage: '',
     date: '', scoreHome: '0', scoreAway: '0',
   });
   const [videoFile, setVideoFile] = useState(null);
@@ -52,24 +52,31 @@ export default function UploadForm({ onClose, onSuccess, showToast }) {
         </div>
 
         <form className="upload-form" onSubmit={handleSubmit} id="upload-form">
-          <div className="form-group">
-            <label className="form-label" htmlFor="upload-competition">Competition *</label>
-            <select id="upload-competition" className="form-input" value={form.competition}
-              onChange={(e) => update('competition', e.target.value)}>
-              {COMPETITIONS.map((c) => <option key={c}>{c}</option>)}
-            </select>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label" htmlFor="upload-competition">Competition *</label>
+              <select id="upload-competition" className="form-input" value={form.competition}
+                onChange={(e) => update('competition', e.target.value)}>
+                {COMPETITIONS.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label" htmlFor="upload-matchStage">Match Stage / Week</label>
+              <input id="upload-matchStage" className="form-input" type="text" placeholder="e.g. Matchweek 5, Final"
+                value={form.matchStage} onChange={(e) => update('matchStage', e.target.value)} />
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: 12 }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label" htmlFor="upload-home">Home Team *</label>
               <input id="upload-home" className="form-input" type="text" placeholder="Arsenal"
-                value={form.homeTeam} onChange={(e) => update('homeTeam', e.target.value)} required />
+                value={form.homeTeam} onChange={(e) => update('homeTeam', e.target.value)} required autoComplete="off" />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label className="form-label" htmlFor="upload-away">Away Team *</label>
               <input id="upload-away" className="form-input" type="text" placeholder="Chelsea"
-                value={form.awayTeam} onChange={(e) => update('awayTeam', e.target.value)} required />
+                value={form.awayTeam} onChange={(e) => update('awayTeam', e.target.value)} required autoComplete="off" />
             </div>
           </div>
 

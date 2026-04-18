@@ -35,6 +35,9 @@ export const getMe = () => api.get('/auth/me').then((r) => r.data);
 export const getHighlights = (filters = {}) =>
   api.get('/highlights', { params: filters }).then((r) => r.data);
 
+export const getTrendingHighlights = () =>
+  api.get('/highlights/trending').then((r) => r.data);
+
 export const getPendingHighlights = () =>
   api.get('/highlights/pending').then((r) => r.data);
 
@@ -56,5 +59,17 @@ export const deleteHighlight = (id) =>
 export const getChatMessages = (channel = 'general') =>
   api.get('/chat/messages', { params: { channel } }).then((r) => r.data);
 
+export const getChannels = () =>
+  api.get('/chat/channels').then((r) => r.data);
+
+export const createChannel = (data) =>
+  api.post('/chat/channels', data).then((r) => r.data);
+
+export const deleteChannel = (id) =>
+  api.delete(`/chat/channels/${id}`).then((r) => r.data);
+
+// ─── Widgets ──────────────────────────────────────────────────────────────────
+export const getAIFact = () =>
+  api.get('/widgets/fact').then((r) => r.data);
 
 export default api;
