@@ -85,6 +85,7 @@ export default function ChatPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChan, setNewChan] = useState({ id: '', label: '', desc: '', adminOnly: false });
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -170,8 +171,13 @@ export default function ChatPage() {
 
   return (
     <div className="dc-layout">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div className="dc-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Left Sidebar ── */}
-      <aside className="dc-sidebar">
+      <aside className={`dc-sidebar ${sidebarOpen ? 'dc-sidebar-open' : ''}`}>
         <div className="dc-server-header">
           <div className="dc-server-icon">⚽</div>
           <div className="dc-server-info">
@@ -197,7 +203,7 @@ export default function ChatPage() {
             <div key={ch.id} style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 className={`dc-channel-btn ${activeChannel === ch.id ? 'dc-channel-active' : ''}`}
-                onClick={() => setActiveChannel(ch.id)}
+                onClick={() => { setActiveChannel(ch.id); setSidebarOpen(false); }}
                 style={{ flex: 1 }}
               >
                 <span className="dc-channel-icon">{ch.adminOnly ? '🔒' : ch.icon}</span>
@@ -244,6 +250,14 @@ export default function ChatPage() {
       <main className="dc-main">
         {/* Header */}
         <header className="dc-header">
+          {/* Mobile sidebar toggle */}
+          <button
+            className="dc-sidebar-toggle"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label="Toggle channels"
+          >
+            ☰
+          </button>
           <span className="dc-header-icon">{activeChannelInfo?.icon}</span>
           <span className="dc-header-name">{activeChannelInfo?.label}</span>
           <span className="dc-header-desc">{activeChannelInfo?.desc}</span>

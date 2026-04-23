@@ -4,6 +4,7 @@
  */
 
 let socket = null;
+let _forcedLogout = false; // prevent auto-reconnect after server-side kick
 const listeners = new Map(); // event type → Set of callbacks
 
 function getWSUrl(token) {
@@ -27,6 +28,18 @@ export function connect(token) {
   socket.addEventListener('message', (event) => {
     try {
       const msg = JSON.parse(event.data);
+
+      // Server is kicking this session because another device logged in
+      if (msg.type === 'force_logout') {
+        _forcedLogout = true;
+        sessionStorage.removeItem('kc_token');
+        socket?.close();
+        socket = null;
+        alert(msg.reason || 'You have been logged out because you signed in from another device.');
+        window.location.href = '/';
+        return;
+      }
+
       emit(msg.type, msg.data ?? msg);
     } catch {
       /* ignore malformed */
@@ -37,9 +50,11 @@ export function connect(token) {
     console.log('[WS] Disconnected');
     emit('__disconnected', null);
     socket = null;
-    // Auto-reconnect after 3 seconds if token still valid
-    const t = localStorage.getItem('kc_token');
-    if (t) setTimeout(() => connect(t), 3000);
+    // Auto-reconnect after 3 seconds — but NOT if the server kicked us out
+    if (!_forcedLogout) {
+      const t = sessionStorage.getItem('kc_token');
+      if (t) setTimeout(() => connect(t), 3000);
+    }
   });
 
   socket.addEventListener('error', (err) => {
@@ -48,6 +63,7 @@ export function connect(token) {
 }
 
 export function disconnect() {
+  _forcedLogout = false; // reset so manual reconnect works after re-login
   if (socket) {
     socket.close();
     socket = null;
