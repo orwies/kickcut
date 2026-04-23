@@ -1,11 +1,61 @@
 'use strict';
 
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { verifyJWT, requireAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const wsHub = require('../wsHub');
 
+const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 const router = express.Router();
+
+/**
+ * GET /highlights/video/:filename
+ * Stream a video file with proper Content-Type and range support.
+ * This ensures browsers play the video inline instead of downloading it.
+ */
+router.get('/video/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename); // prevent path traversal
+  const filePath = path.join(UPLOAD_DIR, 'videos', filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Video not found' });
+  }
+
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  // Determine MIME type based on extension
+  const ext = path.extname(filename).toLowerCase();
+  const mimeMap = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.ogg': 'video/ogg', '.mov': 'video/mp4', '.mkv': 'video/webm' };
+  const contentType = mimeMap[ext] || 'video/mp4';
+
+  if (range) {
+    // Partial content (range request) — required for video scrubbing
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunkSize = (end - start) + 1;
+
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': contentType,
+    });
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+  } else {
+    // Full file
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
+});
 
 /**
  * GET /highlights
@@ -135,15 +185,33 @@ router.patch('/:id/approve', verifyJWT, requireAdmin, async (req, res) => {
 
 /**
  * DELETE /highlights/:id
- * Admin: delete (reject) a highlight.
+ * Admin: delete a highlight and remove its video + thumbnail files from disk.
  */
 router.delete('/:id', verifyJWT, requireAdmin, async (req, res) => {
   try {
+    // First fetch the highlight so we know which files to remove
+    const highlights = await req.pool.dispatch('getHighlights', { status: 'all_including_deleted' });
+    const highlight = highlights?.find ? highlights.find(h => h._id?.toString() === req.params.id) : null;
+
+    // Delete physical files if they exist
+    if (highlight) {
+      const deleteFile = (urlPath) => {
+        if (!urlPath) return;
+        // urlPath is like /uploads/videos/filename.mp4
+        const rel = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath;
+        const abs = path.join(UPLOAD_DIR, '..', rel);
+        try { fs.unlinkSync(abs); } catch { /* file may already be gone, ignore */ }
+      };
+      deleteFile(highlight.videoPath);
+      deleteFile(highlight.thumbnailPath);
+    }
+
     const result = await req.pool.dispatch('deleteHighlight', { id: req.params.id });
     res.json(result);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;

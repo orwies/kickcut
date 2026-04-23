@@ -8,9 +8,17 @@ function formatDate(dateStr) {
   });
 }
 
+/** Convert a stored path like /uploads/videos/file.mp4 to the streaming endpoint */
+function videoStreamUrl(videoPath) {
+  if (!videoPath) return null;
+  const filename = videoPath.split('/').pop();
+  return `/highlights/video/${filename}`;
+}
+
 export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showToast }) {
   const { user } = useAuth();
   const [liking, setLiking] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const isLiked = highlight.likes?.includes(user?.id);
   const likeCount = highlight.likes?.length ?? 0;
@@ -43,73 +51,109 @@ export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showT
 
   function openVideo(e) {
     if (highlight.videoPath) {
-      window.open(highlight.videoPath, '_blank');
+      setVideoOpen(true);
     }
   }
 
+  const streamUrl = videoStreamUrl(highlight.videoPath);
+
   return (
-    <article className="highlight-card" id={`highlight-card-${highlight._id}`} onClick={openVideo}>
-      <div className="card-thumbnail">
-        {highlight.thumbnailPath ? (
-          <img
-            src={highlight.thumbnailPath}
-            alt={`${highlight.homeTeam} vs ${highlight.awayTeam}`}
-            loading="lazy"
-          />
-        ) : (
-          <div className="card-thumbnail-placeholder">⚽</div>
-        )}
+    <>
+      <article className="highlight-card" id={`highlight-card-${highlight._id}`} onClick={openVideo}>
+        <div className="card-thumbnail">
+          {highlight.thumbnailPath ? (
+            <img
+              src={highlight.thumbnailPath}
+              alt={`${highlight.homeTeam} vs ${highlight.awayTeam}`}
+              loading="lazy"
+            />
+          ) : (
+            <div className="card-thumbnail-placeholder">⚽</div>
+          )}
 
-        {highlight.videoPath && (
-          <div className="card-play-btn">
-            <div className="play-icon">▶</div>
+          {highlight.videoPath && (
+            <div className="card-play-btn">
+              <div className="play-icon">▶</div>
+            </div>
+          )}
+
+          <div className="card-competition">
+            {highlight.competition}{highlight.matchStage ? ` • ${highlight.matchStage}` : ''}
           </div>
-        )}
-
-        <div className="card-competition">
-          {highlight.competition}{highlight.matchStage ? ` • ${highlight.matchStage}` : ''}
         </div>
-      </div>
 
-      <div className="card-body">
-        <div className="card-teams">
-          <span className="team-name">{highlight.homeTeam}</span>
+        <div className="card-body">
+          <div className="card-teams">
+            <span className="team-name">{highlight.homeTeam}</span>
 
-          <div className="score-badge">
-            <span>{highlight.score?.home ?? 0}</span>
-            <span className="score-sep">–</span>
-            <span>{highlight.score?.away ?? 0}</span>
+            <div className="score-badge">
+              <span>{highlight.score?.home ?? 0}</span>
+              <span className="score-sep">–</span>
+              <span>{highlight.score?.away ?? 0}</span>
+            </div>
+
+            <span className="team-name" style={{ textAlign: 'right' }}>{highlight.awayTeam}</span>
           </div>
 
-          <span className="team-name" style={{ textAlign: 'right' }}>{highlight.awayTeam}</span>
-        </div>
+          <div className="card-meta">
+            <span className="card-date" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              📅 {highlight.date ? formatDate(highlight.date) : 'Unknown date'}
+              {user?.role === 'admin' && (
+                <button 
+                  onClick={handleDelete} 
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff5555', fontSize: '1rem', padding: '0 4px' }}
+                  title="Delete Highlight"
+                >
+                  🗑️
+                </button>
+              )}
+            </span>
 
-        <div className="card-meta">
-          <span className="card-date" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            📅 {highlight.date ? formatDate(highlight.date) : 'Unknown date'}
-            {user?.role === 'admin' && (
-              <button 
-                onClick={handleDelete} 
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff5555', fontSize: '1rem', padding: '0 4px' }}
-                title="Delete Highlight"
-              >
-                🗑️
-              </button>
-            )}
-          </span>
-
-          <button
-            id={`like-btn-${highlight._id}`}
-            className={`like-btn${isLiked ? ' liked' : ''}`}
-            onClick={handleLike}
-            disabled={liking}
-            aria-label={`${isLiked ? 'Unlike' : 'Like'} this highlight`}
-          >
-            <span className="heart">{isLiked ? '❤️' : '🤍'}</span>
-            <span>{likeCount}</span>
-          </button>
+            <button
+              id={`like-btn-${highlight._id}`}
+              className={`like-btn${isLiked ? ' liked' : ''}`}
+              onClick={handleLike}
+              disabled={liking}
+              aria-label={`${isLiked ? 'Unlike' : 'Like'} this highlight`}
+            >
+              <span className="heart">{isLiked ? '❤️' : '🤍'}</span>
+              <span>{likeCount}</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+
+      {/* Inline video modal — plays in the same tab */}
+      {videoOpen && streamUrl && (
+        <div
+          className="video-modal-overlay"
+          onClick={() => setVideoOpen(false)}
+        >
+          <div className="video-modal-inner" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="video-modal-close"
+              onClick={() => setVideoOpen(false)}
+              aria-label="Close video"
+            >
+              ✕
+            </button>
+            <div className="video-modal-title">
+              {highlight.homeTeam} vs {highlight.awayTeam}
+              <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.85rem', marginLeft: 10 }}>
+                {highlight.competition}
+              </span>
+            </div>
+            <video
+              className="video-modal-player"
+              src={streamUrl}
+              controls
+              autoPlay
+              playsInline
+              preload="auto"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
