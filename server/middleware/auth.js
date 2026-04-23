@@ -1,6 +1,7 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
+const { isTokenActive } = require('../sessionStore');
 
 /**
  * Middleware: verifyJWT
@@ -16,6 +17,12 @@ function verifyJWT(req, res, next) {
   const token = authHeader.slice(7);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Reject stale tokens: a newer login on another device supersedes this one
+    if (!isTokenActive(decoded.id, token)) {
+      return res.status(401).json({ error: 'Session expired — you logged in from another device' });
+    }
+
     req.user = decoded; // { id, username, role, iat, exp }
     next();
   } catch (err) {

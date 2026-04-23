@@ -28,8 +28,8 @@ class GeminiBot {
     const maxRetries = 3;
     const baseDelay = 1000;
     
-    // Ordered list of models. 1.5-flash-8b has higher free quotas.
-    const fallbackModels = ['gemini-1.5-flash-8b', 'gemini-1.5-flash'];
+    // Ordered list of models — preferred first. 2.5 Flash is the current free-tier model.
+    const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
     for (const modelName of fallbackModels) {
       const activeModel = this.genAI.getGenerativeModel({

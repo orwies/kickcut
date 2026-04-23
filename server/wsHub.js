@@ -3,6 +3,11 @@
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
 const GeminiBot = require('./services/GeminiBot');
+const { isTokenActive, clearSession } = require('./sessionStore');
+
+// userId → timeoutId: clears the server session if the user doesn't reconnect
+// This lets us distinguish a tab close (no reconnect) from a page refresh (reconnects in ~3s)
+const pendingClears = new Map();
 
 let _wss = null;
 let _pool = null;
@@ -22,10 +27,23 @@ function init(httpsServer, pool) {
     try { user = jwt.verify(token, process.env.JWT_SECRET); }
     catch { ws.close(4001, 'Invalid or expired token'); return; }
 
+    // Reject if this token is no longer the active session (another login happened)
+    if (!isTokenActive(user.id, token)) {
+      ws.close(4001, 'Session expired — logged in from another device');
+      return;
+    }
+
     ws.user = user;
     ws.isAlive = true;
     console.log('[WS] ' + user.username + ' connected');
     ws.on('pong', () => { ws.isAlive = true; });
+
+    // If a reconnect timer was pending for this user (page refresh), cancel it
+    if (pendingClears.has(user.id)) {
+      clearTimeout(pendingClears.get(user.id));
+      pendingClears.delete(user.id);
+      console.log('[WS] ' + user.username + ' reconnected — session kept');
+    }
 
     ws.on('message', async (raw) => {
       let msg;
@@ -88,6 +106,16 @@ function init(httpsServer, pool) {
     ws.on('close', () => {
       console.log('[WS] ' + user.username + ' disconnected');
       broadcastOnlineUsers();
+
+      // Start a grace period timer. If they reconnect (refresh) within 12s, cancel it.
+      // If they don't reconnect (tab/window closed), clear their server session so
+      // they can log in again from any device.
+      const tid = setTimeout(() => {
+        pendingClears.delete(user.id);
+        clearSession(user.id);
+        console.log('[WS] Session auto-cleared for ' + user.username + ' (tab closed)');
+      }, 12000);
+      pendingClears.set(user.id, tid);
     });
     ws.on('error', (err) => console.error('[WS] Error:', err.message));
     ws.send(JSON.stringify({ type: 'connected', message: 'Welcome, ' + user.username + '!' }));
@@ -141,4 +169,20 @@ function broadcastOnlineUsers() {
   });
 }
 
-module.exports = { init, broadcast, getConnectedCount };
+/**
+ * Close any open WebSocket connection belonging to userId.
+ * Called when a new login supersedes an existing session.
+ */
+function kickUser(userId, reason) {
+  if (!_wss) return;
+  _wss.clients.forEach((c) => {
+    if (c.readyState === WebSocket.OPEN && c.user?.id === userId) {
+      // Notify the client first so the UI can show a nice message
+      c.send(JSON.stringify({ type: 'force_logout', reason }));
+      // Short delay so the message is flushed before we close
+      setTimeout(() => c.close(4001, reason), 300);
+    }
+  });
+}
+
+module.exports = { init, broadcast, getConnectedCount, kickUser };
