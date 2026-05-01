@@ -88,13 +88,14 @@ const handlers = {
     return { user: user.toSafeObject() };
   },
 
-  async getHighlights({ status, competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam }) {
+  async getHighlights({ status, competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam, team }) {
     const highlights = await tcp.send('FIND_HIGHLIGHTS', {
       status: status || 'approved',
       competition: competition ? String(competition).trim() : undefined,
       matchStage: matchStage ? String(matchStage).trim() : undefined,
       homeTeam: homeTeam ? String(homeTeam).trim() : undefined,
       awayTeam: awayTeam ? String(awayTeam).trim() : undefined,
+      team: team ? String(team).trim() : undefined,
       dateFrom,
       dateTo,
     });

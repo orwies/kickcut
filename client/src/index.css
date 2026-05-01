@@ -345,17 +345,105 @@ select.form-input option { background: var(--bg-secondary); color: var(--text-pr
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 20px 24px;
+  padding: 16px 20px;
   margin-bottom: 24px;
 }
 
+/* Primary row: team search + buttons */
+.filter-bar-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-team-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-team-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 0.95rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filter-team-input {
+  width: 100%;
+  padding: 11px 40px 11px 42px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.filter-team-input::placeholder { color: var(--text-muted); }
+
+.filter-team-input:focus {
+  border-color: var(--green);
+  background: rgba(0, 230, 118, 0.04);
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+}
+
+.filter-team-input:hover:not(:focus) { border-color: var(--border-hover); }
+
+.filter-team-clear {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--transition);
+}
+.filter-team-clear:hover { color: var(--text-primary); }
+
+.filter-bar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Advanced section (collapsible) */
+.filter-bar-advanced {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  animation: fadeIn 0.18s ease;
+}
+
+.filter-bar-advanced .form-group { flex: 1; min-width: 140px; }
+
+/* Advanced toggle button – highlighted when it has a value */
+.filter-advanced-toggle.has-value {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* Old row kept for backward compat if any stray refs exist */
 .filter-bar-row {
   display: flex;
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
 }
-
 .filter-bar-row .form-group { flex: 1; min-width: 140px; max-width: 100%; }
 
 
@@ -1506,7 +1594,13 @@ select.form-input option { background: var(--bg-secondary); color: var(--text-pr
   .highlight-actions { flex-wrap: wrap; }
 
   /* Filter bar */
-  .filter-bar { padding: 12px 16px; }
+  .filter-bar { padding: 12px 14px; }
+  .filter-bar-primary { flex-wrap: nowrap; gap: 8px; }
+  .filter-team-wrap { min-width: 0; }
+  .filter-bar-actions { gap: 6px; }
+  .filter-bar-actions .btn { padding: 9px 14px; font-size: 0.8rem; }
+  .filter-bar-advanced { gap: 8px; }
+  .filter-bar-advanced .form-group { flex: 1 1 calc(50% - 8px); min-width: 120px; }
   .filter-chip { font-size: 0.75rem; padding: 5px 12px; }
 
   /* Pending admin cards */

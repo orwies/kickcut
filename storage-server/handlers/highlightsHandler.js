@@ -35,6 +35,11 @@ async function handleHighlightsRequest(type, payload) {
       if (payload.matchStage)  query.matchStage  = new RegExp(payload.matchStage, 'i');
       if (payload.homeTeam)    query.homeTeam    = new RegExp(payload.homeTeam, 'i');
       if (payload.awayTeam)    query.awayTeam    = new RegExp(payload.awayTeam, 'i');
+      // Generic team search: matches either homeTeam OR awayTeam
+      if (payload.team) {
+        const teamReg = new RegExp(payload.team, 'i');
+        query.$or = [{ homeTeam: teamReg }, { awayTeam: teamReg }];
+      }
       if (payload.dateFrom || payload.dateTo) {
         query.date = {};
         if (payload.dateFrom) query.date.$gte = new Date(payload.dateFrom);

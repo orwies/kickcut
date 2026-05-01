@@ -63,7 +63,7 @@ router.get('/video/:filename', (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
-    const { competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam } = req.query;
+    const { competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam, team } = req.query;
     const result = await req.pool.dispatch('getHighlights', {
       status: 'approved',
       competition,
@@ -72,6 +72,7 @@ router.get('/', async (req, res) => {
       dateTo,
       homeTeam,
       awayTeam,
+      team,
     });
     res.json(result);
   } catch (err) {
