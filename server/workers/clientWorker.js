@@ -33,7 +33,10 @@ const handlers = {
     let userData;
     try {
       userData = await tcp.send('FIND_USER', { username: cleanUsername });
-    } catch {
+    } catch (err) {
+      if (err.message === 'User not found') {
+        throw { status: 404, message: 'User does not exist' };
+      }
       throw { status: 401, message: 'Invalid credentials' };
     }
 

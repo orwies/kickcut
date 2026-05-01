@@ -5,7 +5,6 @@
 ### 1. Node.js (v18 or higher)
 Download and install from: https://nodejs.org/en/download
 - Choose the **LTS** version (recommended)
-- Includes `npm` automatically
 - Verify install: `node --version` and `npm --version`
 
 ### 2. Git
@@ -14,80 +13,62 @@ Download and install from: https://git-scm.com/downloads
 
 ---
 
-## That's it – no database, no extra software needed.
+## 🚀 Quick Automated Setup
 
-The project uses JSON files for storage and generates its own TLS certificate.
+We have created an automated script that handles almost everything for you.
 
----
+Open a PowerShell terminal and run:
 
-## First-time Setup
-
-Open **3 separate PowerShell terminals** and run the following:
-
-### Step 1 – Clone the repo (once)
+### Step 1 – Clone the repo
 ```powershell
-git clone https://github.com/YOUR_USERNAME/kickcut.git
+git clone https://github.com/orwies/kickcut.git
 cd kickcut
 ```
 
-### Step 2 – Install dependencies
+### Step 2 – Run the Setup Script
 ```powershell
-# Root (TLS cert generator)
-npm install
-
-# Storage server
-cd storage-server
-npm install
-cd ..
-
-# Main server
-cd server
-npm install
-cd ..
-
-# React client
-cd client
-npm install
-cd ..
+npm run setup
 ```
+This script will automatically:
+1. Copy the `.env.example` templates to `.env` in the server folders.
+2. Generate secure, self-signed TLS certificates for your local machine.
+3. Install all necessary dependencies across the entire project.
 
-### Step 3 – Generate TLS certificate (once)
-```powershell
-node certs/gen-cert.js
-```
+### Step 3 – Configure your Environment
+Open the newly created `.env` files and add your private keys:
+- **`storage-server/.env`**: Add your `MONGO_URI` connection string.
+- **`server/.env`**: Add your `GEMINI_API_KEY` for the AI bot, and change the `JWT_SECRET` to a random string.
 
 ---
 
 ## Running the Project
 
-You need **3 terminals open at the same time**:
+You need **3 terminals open at the same time** (from the root `kickcut` folder):
 
 ### Terminal 1 – Storage Server
 ```powershell
-cd storage-server
-node server.js
+npm run dev:storage
 ```
 ✅ Expected output:
 ```
-[Storage] Default admin created → username: admin  password: admin123
+[MongoDB] Connected to <your-mongo-uri>
+[Storage] Admin account created → username: orwies
 [Storage] TCP server listening on 127.0.0.1:9000
 ```
 
 ### Terminal 2 – Main Server
 ```powershell
-cd server
-node server.js
+npm run dev:server
 ```
 ✅ Expected output:
 ```
 [Server] HTTPS + WSS listening on https://localhost:3443
-[ClientWorker #0] Connected to storage server
+[WorkerPool] Spawned 4 worker threads
 ```
 
 ### Terminal 3 – React Client
 ```powershell
-cd client
-npm run dev
+npm run dev:client
 ```
 ✅ Expected output:
 ```
@@ -95,58 +76,40 @@ npm run dev
 ```
 
 ### Open the app
-Go to: **http://localhost:5173**
-
-Click **"⚡ Quick Demo Login (admin)"** to enter immediately.
+Go to: **https://localhost:5173** (Note: you may need to bypass the browser's "Not Secure" warning since we use self-signed certificates for local development).
 
 ---
 
-## Default Accounts
+## Default Admin Account
 
-| Username | Password | Role  |
-|----------|----------|-------|
-| admin    | admin123 | Admin |
+| Username | Password    | Role  |
+|----------|-------------|-------|
+| orwies   | orwies13579 | Admin |
 
-The admin account is created automatically on first run.
-You can register more accounts from the login page.
+The admin account is securely seeded into your MongoDB database automatically the first time you run the storage server.
 
 ---
 
-## Project Dependencies (auto-installed via npm install)
+## Project Dependencies
 
 ### Storage Server (`storage-server/`)
-| Package   | Version | Purpose                    |
-|-----------|---------|----------------------------|
-| bcryptjs  | ^2.4.3  | Hashing the default admin password |
-| dotenv    | ^16.4.5 | Loading `.env` config      |
-| mongoose  | ^8.3.4  | (included but unused – JSON files used instead) |
+- **mongoose**: Connects and models data for MongoDB.
+- **bcryptjs**: Hashes passwords securely before storing.
+- **dotenv**: Loads environment variables.
 
 ### Main Server (`server/`)
-| Package            | Version  | Purpose                          |
-|--------------------|----------|----------------------------------|
-| express            | ^4.19.2  | HTTP server & routing            |
-| ws                 | ^8.17.0  | WebSocket server                 |
-| jsonwebtoken       | ^9.0.2   | JWT auth tokens                  |
-| bcryptjs           | ^2.4.3   | Password hashing                 |
-| multer             | ^1.4.5   | File uploads (video/thumbnail)   |
-| express-rate-limit | ^7.3.0   | Rate limiting on auth endpoints  |
-| helmet             | ^7.1.0   | HTTP security headers            |
-| cors               | ^2.8.5   | Cross-origin resource sharing    |
-| dotenv             | ^16.4.5  | Environment variable loading     |
+- **express**: HTTP server & routing.
+- **ws**: Real-time WebSocket server.
+- **@google/generative-ai**: Powers "KickBot" AI using Gemini.
+- **jsonwebtoken**: Manages secure user sessions (JWT).
+- **multer**: Handles secure video and thumbnail uploads.
+- **express-rate-limit & helmet**: Provides DoS protection and security headers.
 
 ### React Client (`client/`)
-| Package          | Version | Purpose                  |
-|------------------|---------|--------------------------|
-| react            | ^18.3.1 | UI framework             |
-| react-dom        | ^18.3.1 | DOM rendering            |
-| react-router-dom | ^6.23.1 | Client-side routing      |
-| axios            | ^1.7.2  | HTTP requests to backend |
-| vite             | ^5.2.12 | Dev server & bundler     |
-
-### Root (`/`)
-| Package    | Version | Purpose                         |
-|------------|---------|---------------------------------|
-| selfsigned | ^2.4.1  | Generating self-signed TLS cert |
+- **react & react-dom**: Core UI framework.
+- **react-router-dom**: Client-side page routing.
+- **axios**: HTTP requests to the backend.
+- **vite**: Lightning-fast dev server & bundler.
 
 ---
 
@@ -155,15 +118,13 @@ You can register more accounts from the login page.
 ```
 kickcut/
 ├── certs/
-│   ├── cert.pem          ← TLS certificate (generated)
-│   ├── key.pem           ← TLS private key (generated, not in git)
+│   ├── cert.pem          ← Public TLS certificate (auto-generated)
+│   ├── key.pem           ← Private TLS key (auto-generated, hidden from git)
 │   └── gen-cert.js
-├── client/               ← React frontend (Vite)
-├── server/               ← Node.js HTTPS + WebSocket server
-│   └── uploads/          ← Uploaded video/thumbnail files (created automatically)
-└── storage-server/
-    └── data/             ← JSON database files (created automatically)
-        ├── users.json
-        ├── highlights.json
-        └── chat_messages.json
+├── client/               ← React frontend
+├── server/               ← Node.js Main Server (HTTPS + WSS)
+│   ├── .env              ← Secrets (Gemini Key, JWT Secret)
+│   └── uploads/          ← Uploaded media files
+└── storage-server/       ← Node.js DB Gateway (TCP)
+    └── .env              ← Secrets (Mongo URI)
 ```

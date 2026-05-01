@@ -2,7 +2,7 @@
 
 A full-stack football highlights sharing platform built with:
 - **React** (Vite) frontend
-- **Node.js** HTTPS + WebSocket main server
+- **Node.js** HTTPS + WebSocket main server (with Gemini AI Bot)
 - **Node.js** raw TCP storage server
 - **MongoDB** database
 
@@ -16,69 +16,48 @@ A full-stack football highlights sharing platform built with:
 | Custom protocol | Length-prefixed JSON over raw TCP (port 9000) |
 | Threads | `worker_threads` in both servers |
 | Files / API | Video & thumbnail uploads; REST + WS API |
-| Encrypted passwords | bcrypt (cost 12) |
+| Encrypted passwords | bcrypt (cost 10) |
 | Security | Input sanitisation, rate limiting, file-type validation, no hashes in responses |
 | TLS | Self-signed cert for HTTPS + WSS |
 | Interactive UI | React SPA: feed, filters, upload, chat, admin panel |
 | Database | MongoDB via custom TCP protocol |
+| AI Integration | Google Gemini API powering "KickBot" inside real-time chat |
 
 ## Prerequisites
 
 - Node.js 18+
-- MongoDB running locally on `mongodb://localhost:27017`
+- MongoDB instance (Atlas Cloud or Local)
+- Google Gemini API Key
 
-## Quick Start
+## Quick Start (Automated Setup)
 
-**Step 1 – Install dependencies & generate TLS cert** (already done if you ran `npm install`):
+**Step 1 – Clone & Setup**:
 ```powershell
 # From the kickcut/ root:
-npm install selfsigned
-node certs/gen-cert.js
-
-cd storage-server; npm install; cd ..
-cd server; npm install; cd ..
-cd client; npm install; cd ..
+npm run setup
 ```
+*(This script automatically installs all dependencies, generates TLS certificates, and prepares your `.env` files).*
 
-**Step 2 – Start the storage server** (Terminal 1):
-```powershell
-cd storage-server
-node server.js
-# Output: [Storage] TCP server listening on 127.0.0.1:9000
-```
+**Step 2 – Add your Secrets**:
+Open the new `.env` files and paste in your `MONGO_URI` and `GEMINI_API_KEY`.
 
-**Step 3 – Start the main server** (Terminal 2):
+**Step 3 – Start the Servers**:
+In three separate terminals, run:
 ```powershell
-cd server
-node server.js
-# Output: [Server] HTTPS + WSS listening on https://localhost:3443
-```
-
-**Step 4 – Start the React client** (Terminal 3):
-```powershell
-cd client
-npm run dev
-# Open: http://localhost:5173
-```
-
-**Step 5 – Create an admin user** (Terminal 4, while servers are running):
-```powershell
-cd server
-node scripts/seedAdmin.js admin admin123
-# Creates admin / admin123
+npm run dev:storage
+npm run dev:server
+npm run dev:client
 ```
 
 ## Usage
 
-1. Open **http://localhost:5173**
-2. Register a regular user account
-3. Log in
-4. Browse the **Highlights Feed** (empty at first)
-5. Click **➕ Upload** to submit a highlight (goes to Pending)
-6. Log in as **admin / admin123** in another tab
-7. Click **🛡️ Admin Panel** → Approve the highlight
-8. The feed **updates in real-time via WebSocket**
-9. Click **💬** in the bottom right for the **live chat**
+1. Open **https://localhost:5173**
+2. Register a regular user account or log in as **orwies / orwies13579** (admin)
+3. Browse the **Highlights Feed**
+4. Click **➕ Upload** to submit a highlight (goes to Pending)
+5. As an admin, click **🛡️ Admin Panel** → Approve the highlight
+6. The feed **updates in real-time via WebSocket**
+7. Click **💬** in the bottom right for the **live chat** and talk to KickBot!
 
 ## Project Structure
 
@@ -88,7 +67,7 @@ kickcut/
 ├── client/             ← React SPA (Vite)
 ├── server/             ← Node.js HTTPS + WSS main server
 │   ├── models/         ← UserModel, HighlightModel (OOP)
-│   ├── services/       ← TCPClient, StorageRequest (OOP)
+│   ├── services/       ← TCPClient, GeminiBot
 │   ├── middleware/     ← auth, rateLimiter, upload
 │   ├── routes/         ← auth, highlights, chat
 │   ├── workers/        ← clientWorker (worker_threads)
