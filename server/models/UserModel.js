@@ -1,11 +1,7 @@
 'use strict';
 
-/**
- * UserModel – OOP class (requirement: ≥2 OOP classes)
- *
- * Represents a user document retrieved from the storage server.
- * Provides validation and safe serialisation (strips password hash).
- */
+// Value object for Users. Handles safe serialization (strips password hash).
+
 class UserModel {
   /**
    * @param {object} doc - Raw user document from MongoDB

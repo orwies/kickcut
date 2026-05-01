@@ -1,10 +1,16 @@
+/**
+ * Global Auth Provider. Manages login, logout, and stores the user/token in sessionStorage.
+ * Also triggers the WebSocket connection once authenticated.
+ */
 import { createContext, useState, useEffect, useCallback } from 'react';
+
 import { login as apiLogin, register as apiRegister } from '../api';
 import api from '../api';
 import { connect, disconnect } from '../ws';
 
 export const AuthContext = createContext(null);
 
+// Context provider that maintains the current user session and authentication tokens.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => sessionStorage.getItem('kc_token'));

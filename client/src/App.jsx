@@ -1,3 +1,4 @@
+// Main App component. Handles high-level routing and global toast notifications.
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/AuthProvider';
 import { useAuth } from './hooks/useAuth';
@@ -7,6 +8,7 @@ import FeedPage from './components/FeedPage';
 import ChatPage from './components/ChatPage';
 import { useState } from 'react';
 
+// Component for handling app-wide routing, auth state, and toast notifications.
 function AppRoutes() {
   const { user, loading } = useAuth();
   const [toast, setToast] = useState(null);
@@ -47,6 +49,7 @@ function AppRoutes() {
   );
 }
 
+// Root App component that provides global Auth and Router context.
 export default function App() {
   return (
     <AuthProvider>

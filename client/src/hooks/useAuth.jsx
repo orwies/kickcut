@@ -1,3 +1,4 @@
+// Simple hook to access auth state from any component.
 import { useContext } from 'react';
 import { AuthContext } from './AuthProvider';
 

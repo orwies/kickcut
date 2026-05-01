@@ -1,3 +1,4 @@
+// Upload form for new highlights. Handles video and thumbnail files via FormData.
 import { useState, useRef } from 'react';
 import { uploadHighlight } from '../api';
 
@@ -6,6 +7,7 @@ const COMPETITIONS = [
   'Ligue 1', 'Champions League', 'Europa League', 'World Cup', 'Other',
 ];
 
+// Modal form for uploading highlight videos and thumbnails to the server.
 export default function UploadForm({ onClose, onSuccess, showToast }) {
   const [form, setForm] = useState({
     homeTeam: '', awayTeam: '', competition: COMPETITIONS[0], matchStage: '',

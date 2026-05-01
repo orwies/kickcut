@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "seed": "node scripts/seedAdmin.js"
+    "setup-certs": "node ../certs/gen-cert.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

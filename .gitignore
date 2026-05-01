@@ -9,11 +9,6 @@ node_modules/
 # TLS private key (never commit this)
 certs/key.pem
 
-# Uploaded files
-server/uploads/
-
-# JSON database files (local data)
-storage-server/data/
 
 # Build output
 client/dist/

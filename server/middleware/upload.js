@@ -1,6 +1,9 @@
 'use strict';
 
+// Handles file uploads (videos and thumbnails). Validates file types and sizes.
+
 const multer = require('multer');
+
 const path = require('path');
 const fs = require('fs');
 

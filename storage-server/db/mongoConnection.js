@@ -1,13 +1,17 @@
 'use strict';
 
+// Shared logic for connecting to MongoDB with a simple retry mechanism.
+
 const mongoose = require('mongoose');
 
 let isConnected = false;
+
 
 /**
  * Connect to MongoDB with retry logic.
  * @param {string} uri - MongoDB connection URI
  */
+// Establishes a connection to the MongoDB database with automated retry logic.
 async function connectMongo(uri) {
   if (isConnected) return;
 

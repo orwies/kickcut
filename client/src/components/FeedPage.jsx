@@ -1,15 +1,22 @@
+/**
+ * The main highlights feed. Shows trending clips and an AI match fact in the sidebar.
+ * Automatically adds new highlights when they're approved.
+ */
 import { useState, useEffect, useCallback } from 'react';
+
 import { getHighlights, getTrendingHighlights, getAIFact } from '../api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import HighlightCard from './HighlightCard';
 import FilterBar from './FilterBar';
 
+// Main Feed Page that displays the highlights grid and the trending sidebar.
 export default function FeedPage({ showToast }) {
   const [highlights, setHighlights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
   const [trending, setTrending] = useState([]);
   const [aiFact, setAiFact] = useState('');
+  const [playingVideo, setPlayingVideo] = useState(null);
 
   const loadHighlights = useCallback(async (f = filters) => {
     setLoading(true);
@@ -112,7 +119,7 @@ export default function FeedPage({ showToast }) {
               ) : (
                 <div className="trending-list">
                   {trending.map((t, idx) => (
-                    <div key={t._id} className="trending-item" style={{ cursor: 'pointer' }} onClick={() => t.videoPath && window.open(t.videoPath, '_blank')}>
+                    <div key={t._id} className="trending-item" style={{ cursor: 'pointer' }} onClick={() => t.videoPath && setPlayingVideo(t)}>
                       <span className="trending-rank">#{idx + 1}</span>
                       <div className="trending-info">
                         <div className="trending-teams">
@@ -132,6 +139,38 @@ export default function FeedPage({ showToast }) {
           </div>
         </aside>
       </div>
+
+      {/* Inline video modal for trending clips */}
+      {playingVideo && (
+        <div
+          className="video-modal-overlay"
+          onClick={() => setPlayingVideo(null)}
+        >
+          <div className="video-modal-inner" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="video-modal-close"
+              onClick={() => setPlayingVideo(null)}
+              aria-label="Close video"
+            >
+              ✕
+            </button>
+            <div className="video-modal-title">
+              {playingVideo.homeTeam} vs {playingVideo.awayTeam}
+              <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.85rem', marginLeft: 10 }}>
+                {playingVideo.competition}
+              </span>
+            </div>
+            <video
+              className="video-modal-player"
+              src={`/highlights/video/${playingVideo.videoPath.split('/').pop()}`}
+              controls
+              autoPlay
+              playsInline
+              preload="auto"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

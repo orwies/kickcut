@@ -1,3 +1,7 @@
+/**
+ * KickBot - Our friendly AI football expert.
+ * Talks to Gemini to answer questions. Includes retries and model fallbacks.
+ */
 'use strict';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');

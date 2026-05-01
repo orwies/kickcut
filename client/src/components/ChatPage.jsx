@@ -1,4 +1,9 @@
+/**
+ * Discord-style chat. Sidebar for channels, main area for messages.
+ * Updates in real-time via WebSockets.
+ */
 import { useState, useEffect, useRef, useCallback } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { getChatMessages, getChannels, createChannel, deleteChannel } from '../api';
 import { sendWS } from '../ws';
@@ -9,11 +14,13 @@ const DEFAULT_CHANNELS = [
   { id: 'kickbot', label: 'kickbot-ai', icon: '⚽', desc: 'Ask KickBot anything about football' },
 ];
 
+// Helper to extract the 24-hour clock time from a date string.
 function formatTime(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+// Helper to determine the relative date (Today, Yesterday, or specific date) for messages.
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   const today = new Date();
@@ -24,6 +31,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+// Generates a user avatar with a consistent color gradient based on their username.
 function getAvatar(username, isBot) {
   if (isBot) return { text: '🤖', gradient: 'linear-gradient(135deg, #00c853, #1b5e20)' };
   const colors = [
@@ -38,6 +46,7 @@ function getAvatar(username, isBot) {
   return { text: username[0].toUpperCase(), gradient: colors[idx] };
 }
 
+// Component to render a single chat message with conditional headers and avatars.
 function Message({ msg, prevMsg }) {
   const avatar = getAvatar(msg.username, msg.isBot);
   const showHeader = !prevMsg || prevMsg.userId !== msg.userId ||
@@ -74,6 +83,7 @@ function Message({ msg, prevMsg }) {
   );
 }
 
+// Main Chat Page component handling channels, messages, and real-time updates.
 export default function ChatPage() {
   const { user } = useAuth();
   const [channels, setChannels] = useState(DEFAULT_CHANNELS);

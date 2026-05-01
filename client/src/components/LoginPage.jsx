@@ -1,6 +1,12 @@
+/**
+ * Login and registration page. 
+ * Use "orwies" / "orwies13579" for admin access.
+ */
 import { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 
+// Login and Registration page for user authentication.
 export default function LoginPage({ showToast }) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState('login');
@@ -29,17 +35,6 @@ export default function LoginPage({ showToast }) {
     }
   }
 
-  async function handleDemoLogin() {
-    setError('');
-    setLoading(true);
-    try {
-      await login('admin', 'admin123');
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Demo login failed – make sure all servers are running');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="login-page">
@@ -56,19 +51,6 @@ export default function LoginPage({ showToast }) {
           </p>
         </div>
 
-        {/* Quick demo access button */}
-        {mode === 'login' && (
-          <button
-            id="demo-login-btn"
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'center', marginBottom: 20, fontSize: '0.875rem' }}
-            onClick={handleDemoLogin}
-            disabled={loading}
-            type="button"
-          >
-            ⚡ Quick Demo Login (admin)
-          </button>
-        )}
 
         <form className="login-form" onSubmit={handleSubmit} id="login-form">
           {error && <div className="login-error" role="alert">{error}</div>}

@@ -1,10 +1,8 @@
 'use strict';
 
-/**
- * HighlightModel – OOP class (requirement: ≥2 OOP classes)
- *
- * Represents a football highlight document with validation.
- */
+// Value object for highlights. Used to validate and normalize data
+// before it goes to the storage server.
+
 class HighlightModel {
   /**
    * @param {object} doc - Raw highlight document

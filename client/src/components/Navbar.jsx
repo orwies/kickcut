@@ -1,9 +1,11 @@
+// Top navigation bar. Handles main tabs, user profile, and triggers modals for admin/upload.
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AdminPanel from './AdminPanel';
 import UploadForm from './UploadForm';
 
+// Global Navigation bar with links to Feed, Chat, and user actions like Upload and Logout.
 export default function Navbar({ showToast }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();

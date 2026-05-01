@@ -1,6 +1,9 @@
 'use strict';
 
+// Rate limiting to prevent brute-force (strict for auth) and spam (relaxed for API).
+
 const rateLimit = require('express-rate-limit');
+
 
 /**
  * Strict limiter for auth endpoints (login / register).

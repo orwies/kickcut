@@ -1,5 +1,9 @@
 'use strict';
 
+// Auth routes: Login, Register, Logout, and identity checks.
+// Enforces a single-device login policy using sessionStore.js.
+
+
 const express = require('express');
 const { loginLimiter } = require('../middleware/rateLimiter');
 const { verifyJWT } = require('../middleware/auth');

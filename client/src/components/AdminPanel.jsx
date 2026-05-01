@@ -1,10 +1,13 @@
+// Admin review queue. Let admins approve or reject pending highlights.
 import { useState, useEffect } from 'react';
 import { getPendingHighlights, approveHighlight, deleteHighlight } from '../api';
 
+// Helper to convert a ISO date string into a readable short UK format.
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// Administrative panel component for reviewing and approving pending highlights.
 export default function AdminPanel({ onClose, showToast }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);

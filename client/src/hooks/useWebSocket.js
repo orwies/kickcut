@@ -6,6 +6,7 @@ import { subscribe, unsubscribe } from '../ws';
  * @param {string} event - Event type
  * @param {Function} callback - Handler; receives event data
  */
+// Hook to subscribe to a specific WebSocket event type and handle incoming data.
 export function useWebSocket(event, callback) {
   const cbRef = useRef(callback);
   cbRef.current = callback;

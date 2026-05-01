@@ -1,7 +1,13 @@
+/**
+ * A single highlight card. Clicking it opens the video player.
+ * Supports liking (toggles heart) and admin-only deletion.
+ */
 import { useState } from 'react';
+
 import { likeHighlight, deleteHighlight } from '../api';
 import { useAuth } from '../hooks/useAuth';
 
+// Helper to format a match date string into a localized short format.
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -9,12 +15,14 @@ function formatDate(dateStr) {
 }
 
 /** Convert a stored path like /uploads/videos/file.mp4 to the streaming endpoint */
+// Returns the internal streaming URL for a given video file path.
 function videoStreamUrl(videoPath) {
   if (!videoPath) return null;
   const filename = videoPath.split('/').pop();
   return `/highlights/video/${filename}`;
 }
 
+// Component to display a single highlight card with like, delete, and video player features.
 export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showToast }) {
   const { user } = useAuth();
   const [liking, setLiking] = useState(false);

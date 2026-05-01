@@ -1,5 +1,9 @@
 'use strict';
 
+// Entry point for the backend. Handles HTTPS, WebSockets, and DB workers.
+// Requires TLS certs in certs/ to run.
+
+
 require('dotenv').config();
 
 const https = require('https');

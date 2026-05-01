@@ -1,17 +1,19 @@
 /**
- * ws.js – Singleton WebSocket connection manager.
- * Connects to /ws?token=... which Vite proxies to wss://localhost:3443/ws
+ * WebSocket manager. Singleton connection that handles real-time messages and 
+ * auto-reconnects if the connection drops.
  */
 
 let socket = null;
 let _forcedLogout = false; // prevent auto-reconnect after server-side kick
 const listeners = new Map(); // event type → Set of callbacks
 
+// Constructs the WebSocket URL with the authentication token attached as a query parameter.
 function getWSUrl(token) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
 }
 
+// Establishes a new WebSocket connection and sets up message and close listeners.
 export function connect(token) {
   // Guard against both OPEN (1) and CONNECTING (0) — was only checking OPEN,
   // which caused a second socket to be created while the first was still connecting,
@@ -62,6 +64,7 @@ export function connect(token) {
   });
 }
 
+// Manually closes the current WebSocket connection and prevents automatic reconnection.
 export function disconnect() {
   _forcedLogout = false; // reset so manual reconnect works after re-login
   if (socket) {
@@ -70,29 +73,35 @@ export function disconnect() {
   }
 }
 
+// Sends a chat message to the general channel.
 export function sendChat(text) {
   sendWS({ type: 'chat', channel: 'general', text });
 }
 
+// Serializes and sends a raw payload object over the open WebSocket.
 export function sendWS(payload) {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload));
   }
 }
 
+// Registers a callback function to listen for a specific WebSocket event type.
 export function subscribe(event, cb) {
   if (!listeners.has(event)) listeners.set(event, new Set());
   listeners.get(event).add(cb);
 }
 
+// Removes a previously registered callback function for a specific event type.
 export function unsubscribe(event, cb) {
   listeners.get(event)?.delete(cb);
 }
 
+// Triggers all registered callbacks for a specific event type with the provided data.
 function emit(event, data) {
   listeners.get(event)?.forEach((cb) => cb(data));
 }
 
+// Checks if the WebSocket is currently in the OPEN state.
 export function isConnected() {
   return socket?.readyState === WebSocket.OPEN;
 }

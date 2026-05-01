@@ -1,5 +1,8 @@
 'use strict';
 
+// Manages a pool of worker threads. Each worker holds a TCP socket to the storage server.
+// Keeps the main thread free for WebSocket traffic while workers handle DB tasks.
+
 const { Worker } = require('worker_threads');
 const { randomUUID } = require('crypto');
 const os = require('os');
@@ -23,6 +26,7 @@ class WorkerPool {
    * Dispatch an action to an available worker thread.
    * Includes a 30-second timeout so requests never hang forever.
    */
+// Sends a request to an available worker thread and returns a promise for the result.
   dispatch(action, payload = {}) {
     return new Promise((resolve, reject) => {
       const taskId = randomUUID();
@@ -53,6 +57,7 @@ class WorkerPool {
     });
   }
 
+// Creates a new worker thread and sets up its lifecycle listeners for results and errors.
   _spawnWorker(id) {
     const thread = new Worker(this.workerScript, {
       workerData: { ...this.sharedData, WORKER_ID: id },
@@ -93,11 +98,13 @@ class WorkerPool {
     });
   }
 
+// Removes a dead or erroring worker from the active pool.
   _removeWorker(entry) {
     const idx = this._workers.indexOf(entry);
     if (idx !== -1) this._workers.splice(idx, 1);
   }
 
+// Picks the next task from the backlog and assigns it to a newly freed worker.
   _drainQueue() {
     if (this._queue.length === 0) return;
     const idle = this._workers.find((w) => !w.busy);

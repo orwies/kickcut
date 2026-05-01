@@ -1,5 +1,9 @@
 'use strict';
 
+// WebSocket Hub. Manages real-time connections, auth, and message broadcasting.
+// Handles forced logout if a user logs in from another device.
+
+
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
 const GeminiBot = require('./services/GeminiBot');
@@ -13,6 +17,7 @@ let _wss = null;
 let _pool = null;
 let _bot = null;
 
+// Starts the WebSocket server and sets up the connection logic and bot integration.
 function init(httpsServer, pool) {
   _pool = pool;
   _bot = new GeminiBot(process.env.GEMINI_API_KEY);
@@ -131,10 +136,12 @@ function init(httpsServer, pool) {
   console.log('[WS] WebSocket hub initialised on /ws');
 }
 
+// Sends a JSON message to a specific WebSocket client.
 function sendTo(ws, type, data) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type, data }));
 }
 
+// Sends a message to all connected clients in a specific channel.
 function broadcast(type, data, channelId) {
   if (!_wss) return;
   const msg = JSON.stringify({ type, data });
@@ -152,8 +159,10 @@ function broadcast(type, data, channelId) {
   });
 }
 
+// Returns the number of currently active WebSocket connections.
 function getConnectedCount() { return _wss ? _wss.clients.size : 0; }
 
+// Broadcasts the list of currently online usernames and roles to all clients.
 function broadcastOnlineUsers() {
   if (!_wss) return;
   const usersMap = new Map();
@@ -173,6 +182,7 @@ function broadcastOnlineUsers() {
  * Close any open WebSocket connection belonging to userId.
  * Called when a new login supersedes an existing session.
  */
+// Forcefully disconnects a user, typically when a new login session starts elsewhere.
 function kickUser(userId, reason) {
   if (!_wss) return;
   _wss.clients.forEach((c) => {

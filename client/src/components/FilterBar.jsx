@@ -1,3 +1,4 @@
+// Filter component for the highlights feed. Supports filtering by team, date, and competition.
 import { useState } from 'react';
 
 const COMPETITIONS = [
@@ -5,6 +6,7 @@ const COMPETITIONS = [
   'Ligue 1', 'Champions League', 'Europa League', 'World Cup', 'Other',
 ];
 
+// Interactive filter bar for refining the highlights feed by competition, team, and date.
 export default function FilterBar({ onFilter }) {
   const [competition, setCompetition] = useState('');
   const [matchStage, setMatchStage] = useState('');
