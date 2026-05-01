@@ -50,7 +50,7 @@ Open the newly created **`.env`** file located in the root folder and add your p
 
 You no longer need to open 3 separate terminals manually!
 
-Just double-click the **`start_dev.bat`** file located in the root `kickcut` folder, or run it from the terminal:
+Run **`start_dev.bat`** in PowerShell:
 
 ```powershell
 .\start_dev.bat
