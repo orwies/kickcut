@@ -19,6 +19,10 @@ We have created an automated script that handles almost everything for you.
 
 Open a PowerShell terminal and run:
 
+> [!WARNING]
+> **Windows Users:** If you get a red error saying `running scripts is disabled on this system`, you need to allow PowerShell to run scripts. Run this command first:
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
 ### Step 1 – Clone the repo
 ```powershell
 git clone https://github.com/orwies/kickcut.git

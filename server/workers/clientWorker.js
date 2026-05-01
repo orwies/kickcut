@@ -21,6 +21,17 @@ const { JWT_SECRET, STORAGE_HOST, STORAGE_PORT, WORKER_ID } = workerData;
 // Each worker maintains its own TCP connection to the storage server
 const tcp = new TCPClient(STORAGE_HOST, parseInt(STORAGE_PORT, 10));
 
+// Prevent unhandled 'error' events from crashing the worker thread
+tcp.on('error', (err) => {
+  console.warn(`[ClientWorker #${WORKER_ID}] TCP error caught:`, err.message);
+});
+
+// If the connection drops while active, exit the worker so the pool respawns it
+tcp.on('disconnected', () => {
+  console.warn(`[ClientWorker #${WORKER_ID}] Connection lost. Exiting to reconnect...`);
+  process.exit(1);
+});
+
 // ─── Action Handlers ──────────────────────────────────────────────────────────
 
 const handlers = {

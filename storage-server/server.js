@@ -65,10 +65,17 @@ const server = net.createServer((socket) => {
   // Worker → socket: send response back over TCP
   worker.on('message', ({ requestId, status, data, error }) => {
     if (socket.destroyed) return;
-    const response = status === 'ok'
-      ? { id: requestId, status: 'ok', data }
-      : { id: requestId, status: 'error', error };
-    socket.write(encodeMessage(response));
+    try {
+      const response = status === 'ok'
+        ? { id: requestId, status: 'ok', data }
+        : { id: requestId, status: 'error', error };
+      socket.write(encodeMessage(response));
+    } catch (err) {
+      console.error(`[Storage] Failed to encode response for request #${requestId}:`, err.message);
+      if (!socket.destroyed) {
+        socket.write(encodeMessage({ id: requestId, status: 'error', error: 'Internal serialization error' }));
+      }
+    }
   });
 
   worker.on('error', (err) => {
