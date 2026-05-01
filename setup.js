@@ -25,7 +25,21 @@ envPaths.forEach(({ example, target }) => {
   }
 });
 
-// 2. Generate Certs
+// 2. Install Dependencies
+const dirs = ['.', 'client', 'server', 'storage-server'];
+console.log('\n📦 Installing dependencies for all folders (this might take a minute)...');
+
+dirs.forEach(dir => {
+  const folderName = dir === '.' ? 'root' : dir;
+  console.log(`\n⬇️  Installing in /${folderName}...`);
+  try {
+    execSync('npm install', { stdio: 'inherit', cwd: path.join(__dirname, dir) });
+  } catch (err) {
+    console.error(`❌ Failed to install dependencies in /${folderName}`);
+  }
+});
+
+// 3. Generate Certs
 console.log('\n🔒 Generating SSL Certificates...');
 try {
   execSync('node certs/gen-cert.js', { stdio: 'inherit', cwd: __dirname });
@@ -33,19 +47,6 @@ try {
 } catch (err) {
   console.error('❌ Failed to generate certificates.');
 }
-
-// 3. Install Dependencies
-const dirs = ['client', 'server', 'storage-server'];
-console.log('\n📦 Installing dependencies for all folders (this might take a minute)...');
-
-dirs.forEach(dir => {
-  console.log(`\n⬇️  Installing in /${dir}...`);
-  try {
-    execSync('npm install', { stdio: 'inherit', cwd: path.join(__dirname, dir) });
-  } catch (err) {
-    console.error(`❌ Failed to install dependencies in /${dir}`);
-  }
-});
 
 console.log('\n🎉 Setup Complete! 🎉');
 console.log('You just need to add your MONGO_URI and GEMINI_API_KEY to the .env files.');
