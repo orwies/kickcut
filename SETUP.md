@@ -39,9 +39,10 @@ This script will automatically:
 3. Install all necessary dependencies across the entire project.
 
 ### Step 3 – Configure your Environment
-Open the newly created `.env` files and add your private keys:
-- **`storage-server/.env`**: Add your `MONGO_URI` connection string.
-- **`server/.env`**: Add your `GEMINI_API_KEY` for the AI bot, and change the `JWT_SECRET` to a random string.
+Open the newly created **`.env`** file located in the root folder and add your private keys:
+- Add your `MONGO_URI` connection string.
+- Add your `GEMINI_API_KEY` for the AI bot.
+- (Optional) Change the `JWT_SECRET` to a random string.
 
 ---
 

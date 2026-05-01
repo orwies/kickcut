@@ -1,7 +1,3 @@
-/**
- * KickBot - Our friendly AI football expert.
- * Talks to Gemini to answer questions. Includes retries and model fallbacks.
- */
 'use strict';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -12,6 +8,13 @@ Keep answers concise (3-4 sentences max), enthusiastic and insightful.
 Use football terminology naturally. Feel free to use emojis.
 If asked something unrelated to football, say: "I only talk football! Ask me something about the beautiful game ⚽"`;
 
+const MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
+];
+
 class GeminiBot {
   constructor(apiKey) {
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
@@ -21,57 +24,33 @@ class GeminiBot {
     }
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.enabled = true;
-    console.log('[KickBot] Gemini Models ready with fallback support ⚽');
+    console.log('[KickBot] Ready ⚽');
   }
 
   async ask(question) {
     if (!this.enabled) {
-      return `KickBot is not configured. Add GEMINI_API_KEY to server/.env`;
+      return 'KickBot is not configured. Add GEMINI_API_KEY to the root .env file.';
     }
 
-    const maxRetries = 3;
-    const baseDelay = 1000;
-    
-    // Ordered list of models — preferred first. 2.5 Flash is the current free-tier model.
-    const fallbackModels = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-1.0-pro',
-      'gemini-pro'
-    ];
-
-    for (const modelName of fallbackModels) {
-      const activeModel = this.genAI.getGenerativeModel({
-        model: modelName,
-        systemInstruction: SYSTEM_PROMPT,
-      });
-
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const result = await activeModel.generateContent(question);
-          return result.response.text().trim();
-        } catch (err) {
-          const msg = err.message || '';
-          console.warn(`[KickBot] Attempt ${attempt} failed with ${modelName}:`, msg);
-
-          // If quota exceeded, rate limited (429), or model not found (404), failover to next model
-          if (msg.includes('429') || msg.includes('404') || msg.includes('Quota') || msg.includes('exhausted')) {
-             break; // breaks out of retry loop, moves to next model
-          }
-
-          // If it's a 503 or transient error, retry with exponential backoff
-          if (attempt === maxRetries) {
-            break; // give up on this model after max retries
-          }
-          
-          await new Promise(res => setTimeout(res, baseDelay * Math.pow(2, attempt - 1)));
-        }
+    for (const modelName of MODELS) {
+      try {
+        console.log(`[KickBot] Trying ${modelName}...`);
+        const model = this.genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_PROMPT,
+        });
+        const result = await model.generateContent(question);
+        const text = result.response.text().trim();
+        console.log(`[KickBot] ✅ Success with ${modelName}`);
+        return text;
+      } catch (err) {
+        console.warn(`[KickBot] ❌ ${modelName} failed — ${err.message}`);
+        // Always move to the next model, no matter what the error is
       }
     }
-    
-    return `Sorry, I couldn't answer that right now due to server demand. Please try again! ⚽`;
+
+    console.error('[KickBot] All models failed.');
+    return "Sorry, I couldn't answer that right now due to server demand. Please try again! ⚽";
   }
 }
 

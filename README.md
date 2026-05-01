@@ -39,7 +39,7 @@ npm run setup
 *(This script automatically installs all dependencies, generates TLS certificates, and prepares your `.env` files).*
 
 **Step 2 – Add your Secrets**:
-Open the new `.env` files and paste in your `MONGO_URI` and `GEMINI_API_KEY`.
+Open the new `.env` file in the root folder and paste in your `MONGO_URI` and `GEMINI_API_KEY`.
 
 **Step 3 – Start the Environment**:
 Double-click the `start_dev.bat` file in your project folder, or run it from the terminal:

@@ -4,7 +4,7 @@
 // Uses raw TCP for speed (no HTTP overhead). 
 // Spawns a worker thread for every client connection to keep things parallel.
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const net = require('net');
 const { Worker } = require('worker_threads');
 const path = require('path');
@@ -14,7 +14,7 @@ const TCP_PORT = parseInt(process.env.TCP_PORT || '9000', 10);
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error('[Storage] ERROR: MONGO_URI is not set in storage-server/.env');
+  console.error('[Storage] ERROR: MONGO_URI is not set in the root .env file');
   process.exit(1);
 }
 

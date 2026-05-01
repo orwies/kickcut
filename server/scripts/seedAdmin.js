@@ -5,7 +5,7 @@
  * Run: node scripts/seedAdmin.js
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 
 const net = require('net');
 const bcrypt = require('bcryptjs');

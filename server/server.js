@@ -4,7 +4,7 @@
 // Requires TLS certs in certs/ to run.
 
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const https = require('https');
 const fs = require('fs');
