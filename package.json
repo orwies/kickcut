@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "gen-cert": "node certs/gen-cert.js",
-    "setup": "npm install && node certs/gen-cert.js",
+    "setup": "node setup.js",
     "dev:storage": "cd storage-server && npm run dev",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev"
