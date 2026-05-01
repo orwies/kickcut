@@ -5,7 +5,12 @@ import { useAuth } from '../hooks/useAuth';
 import AdminPanel from './AdminPanel';
 import UploadForm from './UploadForm';
 
-// Global Navigation bar with links to Feed, Chat, and user actions like Upload and Logout.
+/**
+ * Global Navigation bar component.
+ * Receives 'showToast' for passing down to the child modals.
+ * Tracks current route to highlight tabs, handles responsive menus, and manages the visibility of admin and upload overlays.
+ * Returns the JSX elements for the top navigation UI.
+ */
 export default function Navbar({ showToast }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -17,6 +22,12 @@ export default function Navbar({ showToast }) {
   const onFeed = location.pathname === '/';
   const onChat = location.pathname === '/chat';
 
+  /**
+   * Handles route navigation triggered from the navbar tabs.
+   * Receives the target URL 'path' string.
+   * Pushes the new path to the router history and ensures the mobile dropdown menu is closed.
+   * Returns nothing.
+   */
   function navTo(path) {
     navigate(path);
     setMenuOpen(false);

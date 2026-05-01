@@ -35,6 +35,12 @@ tcp.on('disconnected', () => {
 // ─── Action Handlers ──────────────────────────────────────────────────────────
 
 const handlers = {
+  /**
+   * Authenticates a user by checking their username and password against the database.
+   * Gets a payload containing username and password strings.
+   * It sanitizes input, fetches the user, verifies the password hash, and signs a JWT.
+   * Returns an object containing the generated token and safe user profile data.
+   */
   async login({ username, password }) {
     if (!username || !password) throw { status: 400, message: 'Username and password are required' };
 
@@ -65,6 +71,12 @@ const handlers = {
     return { token, user: user.toSafeObject() };
   },
 
+  /**
+   * Registers a new user account with the provided credentials.
+   * Gets a payload with a username and password string.
+   * It validates input rules, hashes the password with bcrypt, and sends a CREATE_USER command.
+   * Returns an object containing the newly created safe user profile data.
+   */
   async register({ username, password }) {
     if (!username || !password) throw { status: 400, message: 'Username and password are required' };
 
@@ -88,6 +100,12 @@ const handlers = {
     return { user: user.toSafeObject() };
   },
 
+  /**
+   * Dispatches a FIND_HIGHLIGHTS request to the storage server to fetch filtered highlights.
+   * Receives various filter parameters including status, competition, dates, and team names.
+   * It formats these parameters and sends them via the TCP connection.
+   * Returns an array of serialized highlight documents matching the filters.
+   */
   async getHighlights({ status, competition, matchStage, dateFrom, dateTo, homeTeam, awayTeam, team }) {
     const highlights = await tcp.send('FIND_HIGHLIGHTS', {
       status: status || 'approved',
@@ -102,10 +120,22 @@ const handlers = {
     return highlights;
   },
 
+  /**
+   * Fetches a list of highlights that are currently in the 'pending' status.
+   * Takes no arguments.
+   * Sends a FIND_PENDING_HIGHLIGHTS command to the storage server via TCP.
+   * Returns an array of serialized pending highlight documents.
+   */
   async getPendingHighlights() {
     return tcp.send('FIND_PENDING_HIGHLIGHTS', {});
   },
 
+  /**
+   * Creates a new highlight entry in the database.
+   * Receives a payload containing all highlight metadata (teams, score, file paths, uploader info).
+   * Validates the data using HighlightModel, determines status based on role, and sends a CREATE_HIGHLIGHT command.
+   * Returns the newly created, serialized highlight document.
+   */
   async createHighlight({ homeTeam, awayTeam, competition, matchStage, date, scoreHome, scoreAway, thumbnailPath, videoPath, uploadedBy, uploaderRole }) {
     const model = new HighlightModel({
       homeTeam: String(homeTeam || '').trim(),
@@ -126,25 +156,55 @@ const handlers = {
     return tcp.send('CREATE_HIGHLIGHT', model.toObject());
   },
 
+  /**
+   * Toggles the 'like' status of a specific highlight for a user.
+   * Receives an object containing the highlight 'id' and the 'userId'.
+   * Sends a LIKE_HIGHLIGHT command to the storage server via TCP.
+   * Returns the updated serialized highlight document.
+   */
   async likeHighlight({ id, userId }) {
     if (!id) throw { status: 400, message: 'Highlight ID required' };
     return tcp.send('LIKE_HIGHLIGHT', { id: String(id), userId: String(userId) });
   },
 
+  /**
+   * Approves a pending highlight, changing its status to 'approved' so it becomes visible.
+   * Receives an object containing the highlight 'id' to be approved.
+   * Sends an UPDATE_HIGHLIGHT command to the storage server with the new status.
+   * Returns the updated serialized highlight document.
+   */
   async approveHighlight({ id }) {
     if (!id) throw { status: 400, message: 'Highlight ID required' };
     return tcp.send('UPDATE_HIGHLIGHT', { id: String(id), updates: { status: 'approved' } });
   },
 
+  /**
+   * Deletes a highlight from the database.
+   * Receives an object containing the highlight 'id' to be deleted.
+   * Sends a DELETE_HIGHLIGHT command to the storage server via TCP.
+   * Returns an object indicating successful deletion (e.g., { deleted: true }).
+   */
   async deleteHighlight({ id }) {
     if (!id) throw { status: 400, message: 'Highlight ID required' };
     return tcp.send('DELETE_HIGHLIGHT', { id: String(id) });
   },
 
+  /**
+   * Retrieves chat messages for a specific channel.
+   * Receives an optional configuration object with 'channel' (defaults to 'general') and 'userId'.
+   * Sends a FIND_CHAT_MESSAGES command to the storage server.
+   * Returns an array of recent chat message documents for that channel.
+   */
   async getChatMessages({ channel = 'general', userId } = {}) {
     return tcp.send('FIND_CHAT_MESSAGES', { channel, userId: userId ? String(userId) : undefined, limit: 50 });
   },
 
+  /**
+   * Creates a new chat message in a specified channel.
+   * Receives message details including userId, username, text, channel name, and bot/owner flags.
+   * Validates the text content and sends a CREATE_CHAT_MESSAGE command to the storage server.
+   * Returns the newly created chat message document.
+   */
   async createChatMessage({ userId, username, text, channel = 'general', isBot = false, ownerId = null }) {
     if (!text || !String(text).trim()) throw { status: 400, message: 'Message text is required' };
     return tcp.send('CREATE_CHAT_MESSAGE', {
@@ -157,15 +217,33 @@ const handlers = {
     });
   },
 
+  /**
+   * Fetches a list of all available chat channels.
+   * Takes no arguments.
+   * Sends a FIND_CHANNELS command to the storage server.
+   * Returns an array of channel objects representing the available chat rooms.
+   */
   async FIND_CHANNELS() {
     return tcp.send('FIND_CHANNELS', {});
   },
 
+  /**
+   * Creates a new custom chat channel.
+   * Receives a payload containing the new channel's 'id' and 'label'.
+   * Validates the presence of required fields and sends a CREATE_CHANNEL command.
+   * Returns the newly created channel object.
+   */
   async CREATE_CHANNEL(payload) {
     if (!payload.id || !payload.label) throw { status: 400, message: 'Channel ID and Label required' };
     return tcp.send('CREATE_CHANNEL', payload);
   },
 
+  /**
+   * Deletes a specific chat channel.
+   * Receives an object containing the 'id' of the channel to be deleted.
+   * Validates the presence of the ID and sends a DELETE_CHANNEL command to the storage server.
+   * Returns an object indicating successful deletion.
+   */
   async DELETE_CHANNEL({ id }) {
     if (!id) throw { status: 400, message: 'Channel ID required' };
     return tcp.send('DELETE_CHANNEL', { id: String(id) });
@@ -174,6 +252,12 @@ const handlers = {
 
 // ─── Message dispatcher ───────────────────────────────────────────────────────
 
+/**
+ * Attempts to establish a TCP connection to the storage server with built-in retry logic.
+ * It takes no arguments and relies on the worker's outer scope for configuration.
+ * It loops up to a maximum number of attempts, waiting between failures.
+ * Returns nothing, but exits the process if the connection ultimately fails.
+ */
 async function connectWithRetry() {
   const MAX = 10;
   for (let attempt = 1; attempt <= MAX; attempt++) {
@@ -196,6 +280,12 @@ async function connectWithRetry() {
   process.exit(1);
 }
 
+/**
+ * Initializes the worker thread.
+ * It takes no arguments.
+ * It first establishes a connection to the storage server, then sets up a listener for incoming messages from the parent thread.
+ * Returns nothing; it runs continuously handling dispatched tasks.
+ */
 async function init() {
   await connectWithRetry();
 

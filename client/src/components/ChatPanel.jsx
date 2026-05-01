@@ -4,10 +4,21 @@ import { sendChat } from '../ws';
 import { useAuth } from '../hooks/useAuth';
 import { useWebSocket } from '../hooks/useWebSocket';
 
+/**
+ * Helper to extract the 24-hour clock time from a date string.
+ * Receives a valid 'dateStr' string.
+ * Returns the formatted time string (e.g., '14:30').
+ */
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * Displays a minimal text-based avatar for the chat panel.
+ * Receives the 'username' string.
+ * Slices the first two letters of the name to create a visual badge.
+ * Returns the JSX element for the avatar.
+ */
 function Avatar({ username }) {
   return (
     <div className="chat-avatar" aria-hidden="true">
@@ -16,6 +27,12 @@ function Avatar({ username }) {
   );
 }
 
+/**
+ * Floating chat panel component available globally across the application.
+ * Takes no props.
+ * Manages opening/closing the chat overlay, tracking unread messages, and sending quick chat replies to the 'general' channel.
+ * Returns the JSX layout for the floating chat window.
+ */
 export default function ChatPanel() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -52,11 +69,23 @@ export default function ChatPanel() {
     if (!open) setUnread((n) => n + 1);
   });
 
+  /**
+   * Toggles the visibility of the floating chat panel.
+   * Takes no arguments.
+   * Flips the open state boolean and resets the unread message counter if opening.
+   * Returns nothing.
+   */
   function toggleOpen() {
     setOpen((v) => !v);
     if (!open) setUnread(0);
   }
 
+  /**
+   * Handles sending a message from the panel to the general channel.
+   * Receives the form submit event 'e'.
+   * Prevents default form submission, trims input, calls the sendChat WebSocket helper, and refocuses the input field.
+   * Returns nothing.
+   */
   function handleSend(e) {
     e.preventDefault();
     const text = input.trim();

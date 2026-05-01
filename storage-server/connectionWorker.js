@@ -21,7 +21,12 @@ const CHAT_TYPES = new Set([
   'createChatMessage', 'getChatMessages', 'CREATE_CHAT_MESSAGE', 'FIND_CHAT_MESSAGES',
 ]);
 
-// Routes a request to the appropriate sub-handler based on its message type.
+/**
+ * Routes a request to the appropriate sub-handler based on its message type.
+ * Receives a request 'type' string and a 'payload' object.
+ * Checks the type against predefined Sets (USER_TYPES, HIGHLIGHT_TYPES, CHAT_TYPES) and forwards the call.
+ * Returns the resolved data from the handler, or throws an error for unknown types.
+ */
 async function processRequest(type, payload) {
   if (USER_TYPES.has(type))      return handleUsersRequest(type, payload);
   if (HIGHLIGHT_TYPES.has(type)) return handleHighlightsRequest(type, payload);
@@ -29,7 +34,12 @@ async function processRequest(type, payload) {
   throw new Error(`Unknown message type: ${type}`);
 }
 
-// Initializes the worker by connecting to MongoDB and listening for parent messages.
+/**
+ * Initializes the worker by connecting to MongoDB and listening for parent messages.
+ * Takes no arguments.
+ * Establishes an isolated database connection and sets up message event handlers to process and reply to requests.
+ * Returns nothing.
+ */
 async function init() {
   // Connect this worker's own mongoose instance to MongoDB.
   // Each worker has its own connection — they don't share one.

@@ -16,6 +16,12 @@ const STORAGE_PORT = parseInt(process.env.STORAGE_PORT || '9000', 10);
 const ADMIN_USERNAME = process.argv[2] || 'admin';
 const ADMIN_PASSWORD = process.argv[3] || 'admin123';
 
+/**
+ * Encodes a JSON payload into a raw binary buffer with a 4-byte length prefix.
+ * Receives the 'obj' data payload to encode.
+ * Converts the object to a string, allocates a Buffer, and prepends the byte length for raw TCP transmission.
+ * Returns the concatenated Buffer object ready to send over the socket.
+ */
 function encodeMessage(obj) {
   const body = JSON.stringify(obj);
   const json = Buffer.from(body, 'utf8');
@@ -24,6 +30,12 @@ function encodeMessage(obj) {
   return Buffer.concat([header, json]);
 }
 
+/**
+ * Connects to the storage server via TCP to seed the initial administrator account.
+ * Takes no arguments (reads credentials from command-line arguments or defaults).
+ * Hashes the password using bcrypt, initiates a raw socket connection, sends the CREATE_USER packet, and awaits confirmation.
+ * Returns a Promise that resolves on successful admin creation or rejects on failure.
+ */
 async function seed() {
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
 

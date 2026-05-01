@@ -2,12 +2,22 @@
 import { useState, useEffect } from 'react';
 import { getPendingHighlights, approveHighlight, deleteHighlight } from '../api';
 
-// Helper to convert a ISO date string into a readable short UK format.
+/**
+ * Helper function to convert an ISO date string into a readable short UK format.
+ * Receives a 'dateStr' string representing a valid date.
+ * Uses the native Date object and toLocaleDateString to format it cleanly.
+ * Returns the formatted date string (e.g., '14 Jan 2024').
+ */
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Administrative panel component for reviewing and approving pending highlights.
+/**
+ * Administrative panel modal component for reviewing pending highlights.
+ * Receives 'onClose' to hide the modal and 'showToast' for user feedback notifications.
+ * Fetches the queue of pending videos on mount and provides UI for approval or rejection.
+ * Returns the JSX elements rendering the admin overlay and queue list.
+ */
 export default function AdminPanel({ onClose, showToast }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +36,12 @@ export default function AdminPanel({ onClose, showToast }) {
     })();
   }, []);
 
+  /**
+   * Approves a highlight and moves it from pending to public status.
+   * Receives the 'id' string of the highlight to approve.
+   * Triggers the API approval endpoint, removes the item from the local state list, and displays a success toast.
+   * Returns nothing.
+   */
   async function handleApprove(id) {
     setActionId(id);
     try {
@@ -39,6 +55,12 @@ export default function AdminPanel({ onClose, showToast }) {
     }
   }
 
+  /**
+   * Rejects and permanently deletes a pending highlight.
+   * Receives the 'id' string of the highlight to reject.
+   * Prompts for confirmation, calls the API delete endpoint, updates the local list, and shows a toast.
+   * Returns nothing.
+   */
   async function handleReject(id) {
     if (!window.confirm('Are you sure you want to reject and delete this highlight?')) return;
     setActionId(id);

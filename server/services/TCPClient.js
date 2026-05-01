@@ -13,8 +13,10 @@ const StorageRequest = require('./StorageRequest');
  */
 class TCPClient extends EventEmitter {
   /**
-   * @param {string} host - Storage server hostname
-   * @param {number} port - Storage server port
+   * Initializes a new TCPClient instance.
+   * Receives the 'host' and 'port' of the target storage server.
+   * Sets up internal tracking for the socket, data buffer, and pending request maps.
+   * Returns the initialized TCPClient object.
    */
   constructor(host, port) {
     super();
@@ -28,8 +30,10 @@ class TCPClient extends EventEmitter {
   }
 
   /**
-   * Establish the TCP connection. Returns a Promise that resolves when connected.
-   * @returns {Promise<void>}
+   * Establishes the TCP connection to the storage server.
+   * Takes no arguments.
+   * Creates a socket, sets up event listeners for data/errors, and initiates the connection.
+   * Returns a Promise that resolves when fully connected or rejects on error.
    */
   connect() {
     return new Promise((resolve, reject) => {
@@ -64,10 +68,10 @@ class TCPClient extends EventEmitter {
   }
 
   /**
-   * Send a storage command and await its response.
-   * @param {string} type - Message type
-   * @param {object} payload - Request payload
-   * @returns {Promise<any>} Resolved with response data or rejected with error
+   * Sends a storage command and awaits its response asynchronously.
+   * Receives a message 'type' string and an optional 'payload' object.
+   * Serializes the request, assigns a unique ID, writes to the socket, and tracks the Promise.
+   * Returns a Promise that resolves with the server data or rejects with an error.
    */
   send(type, payload = {}) {
     return new Promise((resolve, reject) => {
@@ -85,8 +89,10 @@ class TCPClient extends EventEmitter {
   }
 
   /**
-   * Accumulate incoming data and parse complete frames.
-   * @param {Buffer} chunk
+   * Accumulates incoming binary data and parses complete frames.
+   * Receives a raw binary 'chunk' from the TCP socket.
+   * Extracts length headers, parses complete JSON frames, and resolves/rejects pending Promises.
+   * Returns nothing.
    */
   _handleData(chunk) {
     this._buffer = Buffer.concat([this._buffer, chunk]);
@@ -119,7 +125,10 @@ class TCPClient extends EventEmitter {
   }
 
   /**
-   * Close the TCP connection gracefully.
+   * Closes the TCP connection gracefully.
+   * Takes no arguments.
+   * Destroys the socket to prevent further communication and clears the connected state.
+   * Returns nothing.
    */
   disconnect() {
     if (this.socket) {

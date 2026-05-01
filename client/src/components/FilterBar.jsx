@@ -7,6 +7,12 @@ const COMPETITIONS = [
 ];
 
 // Interactive filter bar for refining the highlights feed by team, competition, and date.
+/**
+ * Renders the search and filter UI for the highlights feed.
+ * Receives an 'onFilter' callback function as a prop to communicate changes back to the parent component.
+ * It manages local state for various filter inputs (team, competition, matchStage, dates).
+ * Returns a form element containing inputs and buttons for applying or resetting filters.
+ */
 export default function FilterBar({ onFilter }) {
   const [team, setTeam] = useState('');
   const [competition, setCompetition] = useState('');
@@ -15,11 +21,23 @@ export default function FilterBar({ onFilter }) {
   const [dateTo, setDateTo] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  /**
+   * Handles the submission of the filter form.
+   * Receives the form submission event (e) and prevents default browser behavior.
+   * Calls the 'onFilter' prop with the current local state values to trigger a new search.
+   * Returns nothing.
+   */
   function handleApply(e) {
     e.preventDefault();
     onFilter({ team, competition, matchStage, dateFrom, dateTo });
   }
 
+  /**
+   * Resets all filter inputs back to their default empty states.
+   * It takes no arguments.
+   * It clears local state, hides advanced filters, and calls 'onFilter' with an empty object to clear the search.
+   * Returns nothing.
+   */
   function handleReset() {
     setTeam(''); setCompetition(''); setMatchStage('');
     setDateFrom(''); setDateTo('');

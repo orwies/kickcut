@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
+/**
+ * Generates self-signed TLS certificates for local secure development (HTTPS).
+ * Takes no arguments but reads the current directory to check if certs already exist.
+ * Uses the 'selfsigned' library to generate a 2048-bit RSA keypair valid for localhost.
+ * Returns nothing, but writes 'cert.pem' and 'key.pem' files to the certs directory.
+ */
+
 const selfsigned = require('selfsigned');
 const fs = require('fs');
 const path = require('path');

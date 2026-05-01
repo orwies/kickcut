@@ -7,13 +7,23 @@ let socket = null;
 let _forcedLogout = false; // prevent auto-reconnect after server-side kick
 const listeners = new Map(); // event type → Set of callbacks
 
-// Constructs the WebSocket URL with the authentication token attached as a query parameter.
+/**
+ * Constructs the WebSocket URL with the authentication token attached as a query parameter.
+ * Receives the user's JWT 'token' string.
+ * Determines if the protocol should be secure (wss) or standard (ws) based on the page location.
+ * Returns the fully formatted WebSocket connection URL string.
+ */
 function getWSUrl(token) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
 }
 
-// Establishes a new WebSocket connection and sets up message and close listeners.
+/**
+ * Establishes a new WebSocket connection and sets up message and close listeners.
+ * Receives the user's JWT 'token' string.
+ * Connects to the server, binds event handlers for messages/errors/closures, and handles auto-reconnects.
+ * Returns nothing.
+ */
 export function connect(token) {
   // Guard against both OPEN (1) and CONNECTING (0) — was only checking OPEN,
   // which caused a second socket to be created while the first was still connecting,
@@ -64,7 +74,12 @@ export function connect(token) {
   });
 }
 
-// Manually closes the current WebSocket connection and prevents automatic reconnection.
+/**
+ * Manually closes the current WebSocket connection and prevents automatic reconnection.
+ * Takes no arguments.
+ * Resets the forced logout flag and destroys the active socket instance.
+ * Returns nothing.
+ */
 export function disconnect() {
   _forcedLogout = false; // reset so manual reconnect works after re-login
   if (socket) {
@@ -73,35 +88,65 @@ export function disconnect() {
   }
 }
 
-// Sends a chat message to the general channel.
+/**
+ * Sends a chat message to the general channel over the WebSocket.
+ * Receives the message 'text' string to send.
+ * Wraps the text in a 'chat' type payload and forwards it to the generic send function.
+ * Returns nothing.
+ */
 export function sendChat(text) {
   sendWS({ type: 'chat', channel: 'general', text });
 }
 
-// Serializes and sends a raw payload object over the open WebSocket.
+/**
+ * Serializes and sends a raw payload object over the open WebSocket.
+ * Receives a 'payload' object containing event type and data.
+ * Checks if the socket is open before stringifying and transmitting the payload.
+ * Returns nothing.
+ */
 export function sendWS(payload) {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload));
   }
 }
 
-// Registers a callback function to listen for a specific WebSocket event type.
+/**
+ * Registers a callback function to listen for a specific WebSocket event type.
+ * Receives the 'event' string name and the 'cb' callback function.
+ * Adds the callback to a local Map tracking listeners for that event.
+ * Returns nothing.
+ */
 export function subscribe(event, cb) {
   if (!listeners.has(event)) listeners.set(event, new Set());
   listeners.get(event).add(cb);
 }
 
-// Removes a previously registered callback function for a specific event type.
+/**
+ * Removes a previously registered callback function for a specific event type.
+ * Receives the 'event' string name and the 'cb' callback function to remove.
+ * Deletes the specific callback from the local listeners Map.
+ * Returns nothing.
+ */
 export function unsubscribe(event, cb) {
   listeners.get(event)?.delete(cb);
 }
 
-// Triggers all registered callbacks for a specific event type with the provided data.
+/**
+ * Triggers all registered callbacks for a specific event type with the provided data.
+ * Receives the 'event' string name and the 'data' payload.
+ * Iterates through the stored Set of callbacks for the event and invokes each one.
+ * Returns nothing.
+ */
 function emit(event, data) {
   listeners.get(event)?.forEach((cb) => cb(data));
 }
 
-// Checks if the WebSocket is currently in the OPEN state.
+/**
+ * Checks if the WebSocket is currently in the OPEN state.
+ * Takes no arguments.
+ * Examines the internal readyState of the active socket instance.
+ * Returns true if connected, false otherwise.
+ */
 export function isConnected() {
   return socket?.readyState === WebSocket.OPEN;
 }

@@ -6,10 +6,11 @@
 const { User } = require('../db/schemas');
 
 /**
- * Strip the Mongoose document wrapper so we can safely send it over TCP.
- * Also converts _id from an ObjectId object to a plain string.
+ * Converts a Mongoose document to a plain object and ensures IDs are strings for transmission.
+ * Receives a raw Mongoose user 'doc'.
+ * Strips the internal Mongoose wrapper and safely casts the ObjectId to a string.
+ * Returns a clean JSON-serializable user object.
  */
-// Converts a Mongoose document to a plain object and ensures IDs are strings for transmission.
 function serialize(doc) {
   if (!doc) return doc;
   const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
@@ -17,7 +18,12 @@ function serialize(doc) {
   return obj;
 }
 
-// Handles database operations for creating and finding users.
+/**
+ * Handles database operations for user accounts via TCP RPC calls.
+ * Receives an action 'type' string and a 'payload' object.
+ * Processes 'CREATE_USER' for registration and 'FIND_USER' for authentication lookups via Mongoose.
+ * Returns a Promise resolving to the serialized user object or throws if not found/duplicate.
+ */
 async function handleUsersRequest(type, payload) {
   switch (type) {
 

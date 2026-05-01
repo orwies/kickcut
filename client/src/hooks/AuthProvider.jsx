@@ -10,7 +10,12 @@ import { connect, disconnect } from '../ws';
 
 export const AuthContext = createContext(null);
 
-// Context provider that maintains the current user session and authentication tokens.
+/**
+ * Context provider component that maintains the current user session and tokens.
+ * Receives 'children' to render inside the provider tree.
+ * Restores sessions on mount, verifies token expiry, and establishes WebSocket connections if authenticated.
+ * Returns the AuthContext Provider wrapping its child components.
+ */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => sessionStorage.getItem('kc_token'));
@@ -38,6 +43,12 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  /**
+   * Attempts to log in a user and establish a session.
+   * Receives a 'username' and 'password' string.
+   * Calls the API login endpoint, stores the resulting JWT in sessionStorage, sets local state, and connects the WebSocket.
+   * Returns a Promise resolving to the authentication data object.
+   */
   const login = useCallback(async (username, password) => {
     const data = await apiLogin(username, password);
     sessionStorage.setItem('kc_token', data.token);
@@ -47,11 +58,23 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  /**
+   * Registers a new user account.
+   * Receives a 'username' and 'password' string.
+   * Forwards the request to the API registration endpoint.
+   * Returns a Promise resolving to the user profile confirmation.
+   */
   const register = useCallback(async (username, password) => {
     const data = await apiRegister(username, password);
     return data;
   }, []);
 
+  /**
+   * Logs out the current user and clears session state.
+   * Takes no arguments.
+   * Notifies the server of explicit logout, deletes the local storage token, resets context state, and disconnects the WebSocket.
+   * Returns nothing.
+   */
   const logout = useCallback(async () => {
     try {
       // Tell the server to clear the session so the account can log in elsewhere

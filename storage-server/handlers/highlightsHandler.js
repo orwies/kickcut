@@ -9,7 +9,12 @@ const { Highlight } = require('../db/schemas');
  * Converts _id ObjectId to a plain string so it can be sent over TCP as JSON.
  * Also handles arrays of documents.
  */
-// Prepares MongoDB documents for TCP transmission by converting them to plain objects.
+/**
+ * Prepares MongoDB documents for TCP transmission by converting them to plain objects.
+ * Receives a Mongoose document or an array of documents.
+ * It recursively converts object IDs to plain strings and strips Mongoose-specific methods.
+ * Returns the plain JavaScript object(s) ready for JSON serialization.
+ */
 function serialize(doc) {
   if (!doc) return doc;
   if (Array.isArray(doc)) return doc.map(serialize);
@@ -19,6 +24,12 @@ function serialize(doc) {
 }
 
 // Manages highlight CRUD operations and like/unlike toggling in the database.
+/**
+ * Processes incoming highlight-related requests (e.g. creating, finding, updating).
+ * It receives the request 'type' to determine the operation and 'payload' containing parameters like filters or highlight data.
+ * The function interacts with the MongoDB Highlight schema.
+ * It returns the serialized document(s) representing the updated or retrieved highlights, or throws an error.
+ */
 async function handleHighlightsRequest(type, payload) {
   switch (type) {
 

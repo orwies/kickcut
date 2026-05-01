@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react';
 import { subscribe, unsubscribe } from '../ws';
 
 /**
- * Subscribe to a WebSocket event type.
- * @param {string} event - Event type
- * @param {Function} callback - Handler; receives event data
+ * Custom React hook to subscribe to a specific WebSocket event type and handle incoming data.
+ * Receives an 'event' string name and a 'callback' function.
+ * Registers the callback on mount using the global WebSocket manager and cleans up on unmount.
+ * Returns nothing.
  */
-// Hook to subscribe to a specific WebSocket event type and handle incoming data.
 export function useWebSocket(event, callback) {
   const cbRef = useRef(callback);
   cbRef.current = callback;

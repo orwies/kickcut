@@ -9,7 +9,12 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import HighlightCard from './HighlightCard';
 import FilterBar from './FilterBar';
 
-// Main Feed Page that displays the highlights grid and the trending sidebar.
+/**
+ * Main Feed Page component that displays the highlights grid and trending sidebar.
+ * Receives 'showToast' for notifications.
+ * Fetches initial highlight data, manages filter states, and listens for live highlight approvals over WebSockets.
+ * Returns the JSX elements rendering the entire feed view.
+ */
 export default function FeedPage({ showToast }) {
   const [highlights, setHighlights] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +23,12 @@ export default function FeedPage({ showToast }) {
   const [aiFact, setAiFact] = useState('');
   const [playingVideo, setPlayingVideo] = useState(null);
 
+  /**
+   * Loads the highlights from the API based on current filters.
+   * Receives an optional 'f' object containing the active filter criteria.
+   * Dispatches the API GET request, updates local highlights state, and manages the loading spinner.
+   * Returns nothing.
+   */
   const loadHighlights = useCallback(async (f = filters) => {
     setLoading(true);
     try {
@@ -45,17 +56,35 @@ export default function FeedPage({ showToast }) {
     });
   });
 
+  /**
+   * Handles updates to the search filters from the FilterBar component.
+   * Receives the 'newFilters' object.
+   * Stores the filters in local state and immediately triggers a fresh API load.
+   * Returns nothing.
+   */
   function handleFilterChange(newFilters) {
     setFilters(newFilters);
     loadHighlights(newFilters);
   }
 
+  /**
+   * Updates the state of a specific highlight when its like count changes.
+   * Receives the 'updatedHighlight' object from the API response.
+   * Maps over the existing highlights array and replaces the matching document to reflect new like counts.
+   * Returns nothing.
+   */
   function handleLikeUpdate(updatedHighlight) {
     setHighlights((prev) =>
       prev.map((h) => (h._id === updatedHighlight._id ? updatedHighlight : h))
     );
   }
 
+  /**
+   * Removes a specific highlight from the local state after deletion.
+   * Receives the 'deletedId' string of the removed document.
+   * Filters the state array to purge the deleted highlight from the UI without reloading.
+   * Returns nothing.
+   */
   function handleDeleteHighlight(deletedId) {
     setHighlights((prev) => prev.filter((h) => h._id !== deletedId));
   }

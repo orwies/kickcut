@@ -4,7 +4,10 @@
 
 class UserModel {
   /**
-   * @param {object} doc - Raw user document from MongoDB
+   * Constructs a new UserModel value object.
+   * Receives a raw 'doc' object representing a user from MongoDB.
+   * Normalizes the user properties, assigning default roles and creation dates if missing.
+   * Returns the constructed UserModel instance.
    */
   constructor({ _id, username, passwordHash, role, createdAt } = {}) {
     this._id = _id;
@@ -15,8 +18,10 @@ class UserModel {
   }
 
   /**
-   * Validate user fields. Throws on invalid data.
-   * @returns {true}
+   * Validates the core fields of the user object before database storage.
+   * Takes no arguments.
+   * Checks username string length and verifies the user is assigned a valid role.
+   * Returns true if validation passes, otherwise throws an Error.
    */
   validate() {
     if (!this.username || typeof this.username !== 'string') {
@@ -32,9 +37,10 @@ class UserModel {
   }
 
   /**
-   * Return a safe representation with no password hash.
-   * NEVER include passwordHash in API responses.
-   * @returns {object}
+   * Generates a safe representation of the user for client-side consumption.
+   * Takes no arguments.
+   * Deliberately omits the sensitive 'passwordHash' to prevent security leaks.
+   * Returns a plain object with the user ID, username, role, and creation date.
    */
   toSafeObject() {
     return {
@@ -46,9 +52,10 @@ class UserModel {
   }
 
   /**
-   * Construct a UserModel from a raw MongoDB document.
-   * @param {object} doc
-   * @returns {UserModel}
+   * Factory method to construct a UserModel from a raw MongoDB document.
+   * Receives the raw 'doc' object from the database.
+   * Instantiates and returns a new UserModel passing in the user data.
+   * Returns the newly created model instance.
    */
   static fromDoc(doc) {
     return new UserModel(doc);

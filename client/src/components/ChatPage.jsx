@@ -14,13 +14,23 @@ const DEFAULT_CHANNELS = [
   { id: 'kickbot', label: 'kickbot-ai', icon: '⚽', desc: 'Ask KickBot anything about football' },
 ];
 
-// Helper to extract the 24-hour clock time from a date string.
+/**
+ * Helper to extract the 24-hour clock time from a date string.
+ * Receives a valid 'dateStr' string.
+ * Uses Date.toLocaleTimeString to extract just the hour and minute.
+ * Returns the formatted time string (e.g., '14:30').
+ */
 function formatTime(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Helper to determine the relative date (Today, Yesterday, or specific date) for messages.
+/**
+ * Helper to determine the relative date for grouping messages.
+ * Receives a 'dateStr' string.
+ * Compares the date against today and yesterday to return friendly labels, otherwise returns the date.
+ * Returns a formatted date string ('Today', 'Yesterday', or 'Jan 12').
+ */
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   const today = new Date();
@@ -31,7 +41,12 @@ function formatDate(dateStr) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-// Generates a user avatar with a consistent color gradient based on their username.
+/**
+ * Generates a user avatar properties based on their username.
+ * Receives the 'username' string and an 'isBot' boolean.
+ * Selects a static icon for bots, or deterministically picks a gradient color based on the first letter of the user's name.
+ * Returns an object containing the avatar 'text' and 'gradient' CSS string.
+ */
 function getAvatar(username, isBot) {
   if (isBot) return { text: '🤖', gradient: 'linear-gradient(135deg, #00c853, #1b5e20)' };
   const colors = [
@@ -46,7 +61,12 @@ function getAvatar(username, isBot) {
   return { text: username[0].toUpperCase(), gradient: colors[idx] };
 }
 
-// Component to render a single chat message with conditional headers and avatars.
+/**
+ * Renders a single chat message, conditionally showing headers and avatars.
+ * Receives the current 'msg' object and the preceding 'prevMsg' object.
+ * Compares timestamps and user IDs to decide if the avatar and header should be shown (to group sequential messages).
+ * Returns the JSX elements for the message block.
+ */
 function Message({ msg, prevMsg }) {
   const avatar = getAvatar(msg.username, msg.isBot);
   const showHeader = !prevMsg || prevMsg.userId !== msg.userId ||
@@ -83,7 +103,12 @@ function Message({ msg, prevMsg }) {
   );
 }
 
-// Main Chat Page component handling channels, messages, and real-time updates.
+/**
+ * Main Chat Page component handling channels, messages, and real-time WebSocket updates.
+ * Takes no props.
+ * Manages chat state, active channels, fetching history, and sending new messages.
+ * Returns the JSX elements for the complete Discord-style chat layout.
+ */
 export default function ChatPage() {
   const { user } = useAuth();
   const [channels, setChannels] = useState(DEFAULT_CHANNELS);
@@ -99,6 +124,12 @@ export default function ChatPage() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  /**
+   * Fetches the list of available channels from the server.
+   * Takes no arguments.
+   * Calls the getChannels API, separates custom channels, and merges them with default built-in channels.
+   * Returns nothing, but updates local component state.
+   */
   async function loadChannels() {
     try {
       const fetched = await getChannels();
@@ -141,6 +172,12 @@ export default function ChatPage() {
     setOnlineUsers(users || []);
   }, []));
 
+  /**
+   * Handles sending a new chat message.
+   * Receives the form submit event 'e'.
+   * Prevents default form action, clears the input, sets typing indicators if talking to the bot, and dispatches the WebSocket send.
+   * Returns nothing.
+   */
   function handleSend(e) {
     e.preventDefault();
     const text = input.trim();
@@ -151,6 +188,12 @@ export default function ChatPage() {
     sendWS({ type: 'chat', channel: activeChannel, text });
   }
 
+  /**
+   * Submits the form to create a new custom chat channel.
+   * Receives the form submit event 'e'.
+   * Formats the channel ID slug, calls the createChannel API, and reloads the channel list.
+   * Returns nothing.
+   */
   async function handleCreateChannel(e) {
     e.preventDefault();
     if (!newChan.id || !newChan.label) return;
@@ -164,6 +207,12 @@ export default function ChatPage() {
     }
   }
 
+  /**
+   * Deletes a specific chat channel.
+   * Receives the 'id' string of the channel and the click event 'e'.
+   * Prompts for confirmation, calls the API delete endpoint, and defaults back to the general channel.
+   * Returns nothing.
+   */
   async function handleDeleteChannel(id, e) {
     e.stopPropagation();
     if (!window.confirm('Delete this channel entirely?')) return;

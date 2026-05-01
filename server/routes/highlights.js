@@ -14,6 +14,8 @@ const router = express.Router();
  * GET /highlights/video/:filename
  * Stream a video file with proper Content-Type and range support.
  * This ensures browsers play the video inline instead of downloading it.
+ * Gets the video filename from the URL parameters.
+ * Returns the video stream with appropriate HTTP status codes (200 or 206) and headers.
  */
 router.get('/video/:filename', (req, res) => {
   const filename = path.basename(req.params.filename); // prevent path traversal
@@ -59,7 +61,10 @@ router.get('/video/:filename', (req, res) => {
 
 /**
  * GET /highlights
- * Return all approved highlights with optional filters.
+ * Route handler that returns a list of approved highlights.
+ * It extracts filter parameters (like team, competition, dates) from the query string (req.query).
+ * It then dispatches the 'getHighlights' action to the worker pool.
+ * Returns a JSON array of matching highlight objects.
  */
 router.get('/', async (req, res) => {
   try {
@@ -82,7 +87,10 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /highlights/trending
- * Return top 3 highlights sorted by likes.
+ * Retrieves the top 3 trending highlights sorted by the number of likes.
+ * It takes no arguments from the request body or query.
+ * Dispatches a 'getHighlights' action to the worker pool and sorts the results.
+ * Returns a JSON array containing the top 3 highlight objects.
  */
 router.get('/trending', async (req, res) => {
   try {
@@ -100,7 +108,10 @@ router.get('/trending', async (req, res) => {
 
 /**
  * GET /highlights/pending
- * Admin only: return all pending highlights.
+ * Admin only route to retrieve all pending highlights awaiting approval.
+ * It requires a valid JWT and admin role to access.
+ * Dispatches a 'getPendingHighlights' action to the worker pool.
+ * Returns a JSON array of pending highlight objects.
  */
 router.get('/pending', verifyJWT, requireAdmin, async (req, res) => {
   try {
@@ -113,7 +124,10 @@ router.get('/pending', verifyJWT, requireAdmin, async (req, res) => {
 
 /**
  * POST /highlights
- * Upload a new highlight (authenticated users). Goes into pending state.
+ * Handles the upload of a new highlight, including video and thumbnail files.
+ * Receives multipart form data containing files and highlight metadata in req.body.
+ * Processes the files, constructs paths, and dispatches a 'createHighlight' action.
+ * Returns the newly created highlight object in JSON format with a 201 status.
  */
 router.post(
   '/',
@@ -155,7 +169,10 @@ router.post(
 
 /**
  * POST /highlights/:id/like
- * Toggle like on a highlight (authenticated).
+ * Toggles the 'like' status of a specific highlight for the authenticated user.
+ * Gets the highlight ID from the URL parameters and user ID from the JWT payload.
+ * Dispatches a 'likeHighlight' action to the worker pool.
+ * Returns the updated highlight object in JSON format.
  */
 router.post('/:id/like', verifyJWT, async (req, res) => {
   try {
@@ -171,7 +188,10 @@ router.post('/:id/like', verifyJWT, async (req, res) => {
 
 /**
  * PATCH /highlights/:id/approve
- * Admin: approve a pending highlight and broadcast WS event.
+ * Admin only route to approve a pending highlight and make it public.
+ * Gets the highlight ID from the URL parameters.
+ * Dispatches an 'approveHighlight' action and broadcasts a WebSocket event.
+ * Returns the approved highlight object in JSON format.
  */
 router.patch('/:id/approve', verifyJWT, requireAdmin, async (req, res) => {
   try {
@@ -186,7 +206,10 @@ router.patch('/:id/approve', verifyJWT, requireAdmin, async (req, res) => {
 
 /**
  * DELETE /highlights/:id
- * Admin: delete a highlight and remove its video + thumbnail files from disk.
+ * Admin only route to delete a highlight and its associated files from disk.
+ * Gets the highlight ID from the URL parameters.
+ * Retrieves the highlight to locate files, deletes them from the filesystem, and dispatches a 'deleteHighlight' action.
+ * Returns a JSON object confirming deletion.
  */
 router.delete('/:id', verifyJWT, requireAdmin, async (req, res) => {
   try {
@@ -196,6 +219,12 @@ router.delete('/:id', verifyJWT, requireAdmin, async (req, res) => {
 
     // Delete physical files if they exist
     if (highlight) {
+      /**
+       * Helper function to delete a file from the server's filesystem.
+       * Takes the relative URL path of the file to be deleted.
+       * Attempts to remove the file from the uploads directory, ignoring errors if it doesn't exist.
+       * Returns nothing.
+       */
       const deleteFile = (urlPath) => {
         if (!urlPath) return;
         // urlPath is like /uploads/videos/filename.mp4

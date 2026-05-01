@@ -7,22 +7,36 @@ import { useState } from 'react';
 import { likeHighlight, deleteHighlight } from '../api';
 import { useAuth } from '../hooks/useAuth';
 
-// Helper to format a match date string into a localized short format.
+/**
+ * Helper to format a match date string into a localized short format.
+ * Receives a valid 'dateStr'.
+ * Uses the native Date API to format it (e.g., '14 Jan 2024').
+ * Returns the formatted date string.
+ */
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 }
 
-/** Convert a stored path like /uploads/videos/file.mp4 to the streaming endpoint */
-// Returns the internal streaming URL for a given video file path.
+/**
+ * Converts a stored path like /uploads/videos/file.mp4 to the streaming endpoint.
+ * Receives the raw 'videoPath' string from the database.
+ * Extracts the filename and constructs the route pointing to the video stream API.
+ * Returns the final URL string for the <video> src attribute.
+ */
 function videoStreamUrl(videoPath) {
   if (!videoPath) return null;
   const filename = videoPath.split('/').pop();
   return `/highlights/video/${filename}`;
 }
 
-// Component to display a single highlight card with like, delete, and video player features.
+/**
+ * Component to display a single highlight card with like, delete, and video player features.
+ * Receives 'highlight' data object, callback functions, and 'showToast' for alerts.
+ * Renders thumbnail, team data, and manages interactions like toggling the inline video overlay.
+ * Returns the JSX elements for the card.
+ */
 export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showToast }) {
   const { user } = useAuth();
   const [liking, setLiking] = useState(false);
@@ -31,6 +45,12 @@ export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showT
   const isLiked = highlight.likes?.includes(user?.id);
   const likeCount = highlight.likes?.length ?? 0;
 
+  /**
+   * Handles the 'like' button click for a highlight.
+   * Receives the click event 'e'.
+   * Prevents event bubbling, calls the like API, and passes the updated state back via callback.
+   * Returns nothing.
+   */
   async function handleLike(e) {
     e.stopPropagation();
     if (liking) return;
@@ -45,6 +65,12 @@ export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showT
     }
   }
 
+  /**
+   * Triggers the permanent deletion of a highlight.
+   * Receives the click event 'e'.
+   * Prompts the admin for confirmation, calls the delete API, and informs the parent component to update state.
+   * Returns nothing.
+   */
   async function handleDelete(e) {
     e.stopPropagation();
     if (!window.confirm(`Are you sure you want to delete ${highlight.homeTeam} vs ${highlight.awayTeam}?`)) return;
@@ -57,6 +83,12 @@ export default function HighlightCard({ highlight, onLikeUpdate, onDelete, showT
     }
   }
 
+  /**
+   * Opens the full-screen inline video player.
+   * Receives the click event 'e' (unused).
+   * Checks if a video path exists on the highlight and updates local state to render the overlay modal.
+   * Returns nothing.
+   */
   function openVideo(e) {
     if (highlight.videoPath) {
       setVideoOpen(true);

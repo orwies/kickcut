@@ -7,6 +7,12 @@ const router = express.Router();
 let cachedFact = null;
 let factTimestamp = 0;
 
+/**
+ * GET /widgets/fact - Fetches a random football fact using AI.
+ * Takes no query parameters.
+ * Checks the local memory cache to return immediately if a fact was fetched within the last hour; otherwise, queries the GeminiBot service.
+ * Returns a JSON object containing the AI-generated 'fact' string.
+ */
 router.get('/fact', async (req, res) => {
   try {
     const now = Date.now();

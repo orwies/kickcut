@@ -4,9 +4,10 @@ const jwt = require('jsonwebtoken');
 const { isTokenActive } = require('../sessionStore');
 
 /**
- * Middleware: verifyJWT
- * Validates the Bearer token in the Authorization header.
- * Attaches decoded user payload to req.user.
+ * Express middleware to validate JWT Bearer tokens in incoming requests.
+ * Receives the standard 'req', 'res', and 'next' arguments.
+ * Decodes the Authorization header, verifies the signature, and checks the session store to reject stale tokens.
+ * Returns next() on success, or a 401 JSON error on failure.
  */
 function verifyJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -31,8 +32,10 @@ function verifyJWT(req, res, next) {
 }
 
 /**
- * Middleware: requireAdmin
- * Must be used after verifyJWT. Rejects non-admin users.
+ * Express middleware to enforce administrator-only access control.
+ * Receives the standard 'req', 'res', and 'next' arguments.
+ * Inspects the 'req.user.role' populated by verifyJWT to ensure the user is an admin.
+ * Returns next() on success, or a 403 JSON error on failure.
  */
 function requireAdmin(req, res, next) {
   if (!req.user || req.user.role !== 'admin') {

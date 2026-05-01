@@ -8,11 +8,22 @@ import FeedPage from './components/FeedPage';
 import ChatPage from './components/ChatPage';
 import { useState } from 'react';
 
-// Component for handling app-wide routing, auth state, and toast notifications.
+/**
+ * Component for handling app-wide routing, auth state, and toast notifications.
+ * Takes no props directly, but utilizes Auth context.
+ * Renders the top-level layout including Navbar, routes to Chat or Feed, and handles the global toast overlay.
+ * Returns the JSX layout tree.
+ */
 function AppRoutes() {
   const { user, loading } = useAuth();
   const [toast, setToast] = useState(null);
 
+  /**
+   * Displays a temporary notification popup (toast).
+   * Receives a 'message' string and an optional 'type' string (defaulting to 'success').
+   * Sets the toast state to make it visible and schedules a timeout to clear it after 3 seconds.
+   * Returns nothing.
+   */
   const showToast = (message, type = 'success') => {
     const id = Date.now();
     setToast({ id, message, type });
@@ -49,7 +60,12 @@ function AppRoutes() {
   );
 }
 
-// Root App component that provides global Auth and Router context.
+/**
+ * Root application component.
+ * Takes no props.
+ * Wraps the entire application tree with the AuthProvider and BrowserRouter to enable global state and navigation.
+ * Returns the fully wrapped React element tree.
+ */
 export default function App() {
   return (
     <AuthProvider>

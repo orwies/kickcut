@@ -6,7 +6,12 @@ import { useState } from 'react';
 
 import { useAuth } from '../hooks/useAuth';
 
-// Login and Registration page for user authentication.
+/**
+ * Login and Registration page component for user authentication.
+ * Receives 'showToast' to display notifications.
+ * Manages local form state, switches between login/register modes, and submits credentials to the Auth context.
+ * Returns the JSX elements for the complete authentication layout.
+ */
 export default function LoginPage({ showToast }) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState('login');
@@ -15,6 +20,12 @@ export default function LoginPage({ showToast }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Handles form submission for both login and registration modes.
+   * Receives the form submit event 'e'.
+   * Prevents default reloading, clears previous errors, calls the context's login or register functions, and updates UI on success.
+   * Returns nothing, but catches and displays errors if the request fails.
+   */
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');

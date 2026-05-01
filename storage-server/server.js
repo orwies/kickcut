@@ -24,7 +24,12 @@ if (!MONGO_URI) {
 // exactly that many bytes before parsing. This prevents partial-read bugs when
 // the TCP stack splits a message across multiple packets.
 
-// Converts a JavaScript object into a length-prefixed binary frame for TCP transmission.
+/**
+ * Converts a JavaScript object into a length-prefixed binary frame for TCP transmission.
+ * Receives a JavaScript 'obj' to serialize.
+ * Creates a JSON string Buffer and prepends a 4-byte big-endian header indicating its length.
+ * Returns the complete concatenated Buffer.
+ */
 function encodeMessage(obj) {
   const json = Buffer.from(JSON.stringify(obj), 'utf8');
   const header = Buffer.allocUnsafe(4);
@@ -32,7 +37,12 @@ function encodeMessage(obj) {
   return Buffer.concat([header, json]);
 }
 
-// Reads binary chunks from a TCP stream and extracts complete JSON message frames.
+/**
+ * Reads binary chunks from a TCP stream and extracts complete JSON message frames.
+ * Receives a 'buf' Buffer containing incoming network data.
+ * Checks the length header of each segment to ensure complete frames before parsing JSON.
+ * Returns an object containing an array of valid 'frames' and any 'remaining' incomplete buffer data.
+ */
 function parseFrames(buf) {
   const frames = [];
   let offset = 0;
@@ -98,11 +108,12 @@ const server = net.createServer((socket) => {
   socket.on('error', (err) => { console.error(`[Storage] Socket #${workerId} error:`, err.message); worker.terminate(); });
 });
 
-// ─── Auto-seed default admin once MongoDB is ready ────────────────────────────
-// This function runs once at startup. It checks if the designated admin account
-// already exists in the database — if it doesn't, it creates it automatically.
-// This means you never have to manually insert the admin through MongoDB.
-// Ensures the default 'orwies' admin account exists in the database on startup.
+/**
+ * Automatically seeds the default admin account once MongoDB is connected.
+ * Receives the 'mongoUri' string for database access.
+ * Checks if 'orwies' exists; if not, it hashes the default password and creates the admin document.
+ * Returns nothing.
+ */
 async function seedAdmin(mongoUri) {
   const { connectMongo } = require('./db/mongoConnection');
   const { User } = require('./db/schemas');

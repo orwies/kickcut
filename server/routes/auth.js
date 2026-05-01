@@ -12,8 +12,10 @@ const { setSession, getSession, clearSession } = require('../sessionStore');
 const router = express.Router();
 
 /**
- * POST /auth/register
- * Create a new user account.
+ * POST /auth/register - Creates a new user account.
+ * Receives 'username' and 'password' from the request body.
+ * Dispatches a 'register' command to the worker pool to securely hash the password and save to DB.
+ * Returns the newly created user object (status 201) or an error.
  */
 router.post('/register', loginLimiter, async (req, res) => {
   try {
@@ -27,9 +29,10 @@ router.post('/register', loginLimiter, async (req, res) => {
 });
 
 /**
- * POST /auth/login
- * Authenticate user and issue a signed JWT.
- * Rejected if the account already has an active session on another device.
+ * POST /auth/login - Authenticates a user and issues a signed JWT.
+ * Receives 'username' and 'password' credentials.
+ * Dispatches a 'login' command to verify credentials, checks for existing sessions to enforce single-device policy, and registers the session.
+ * Returns the authentication token and user profile, or throws a 409 conflict if already logged in elsewhere.
  */
 router.post('/login', loginLimiter, async (req, res) => {
   try {
@@ -53,8 +56,10 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 /**
- * GET /auth/me
- * Return the currently authenticated user (no password hash ever returned).
+ * GET /auth/me - Retrieves the currently authenticated user's profile.
+ * Takes the user identity from the validated JWT attached to the request.
+ * Formats a safe response object, strictly omitting sensitive data like password hashes.
+ * Returns the authenticated user object.
  */
 router.get('/me', verifyJWT, (req, res) => {
   // Never expose passwordHash – req.user comes from JWT which never contained it
@@ -68,8 +73,10 @@ router.get('/me', verifyJWT, (req, res) => {
 });
 
 /**
- * POST /auth/logout
- * Invalidate the current session so the account can be used on another device.
+ * POST /auth/logout - Invalidates the current user session.
+ * Relies on the valid JWT to identify the requesting user.
+ * Clears the server-side session registry, allowing the user to log in from a different device.
+ * Returns a generic success confirmation {ok: true}.
  */
 router.post('/logout', verifyJWT, (req, res) => {
   clearSession(req.user.id);

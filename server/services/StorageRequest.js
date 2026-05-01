@@ -8,8 +8,10 @@
  */
 class StorageRequest {
   /**
-   * @param {string} type - Message type (e.g. 'FIND_HIGHLIGHTS')
-   * @param {object} payload - Data payload for the request
+   * Constructs a new StorageRequest instance.
+   * Receives a message 'type' string and an optional 'payload' object.
+   * Validates the type and attaches a creation timestamp.
+   * Returns the new StorageRequest object.
    */
   constructor(type, payload = {}) {
     if (!type || typeof type !== 'string') {
@@ -21,9 +23,10 @@ class StorageRequest {
   }
 
   /**
-   * Serialise this request into a length-prefixed Buffer ready to send over TCP.
-   * @param {number} id - Request correlation ID assigned by TCPClient
-   * @returns {Buffer}
+   * Serializes the request into a length-prefixed Buffer.
+   * Receives a unique request correlation 'id' number.
+   * Converts the payload to JSON and prepends a 4-byte big-endian length header.
+   * Returns the complete Buffer ready for TCP transmission.
    */
   serialise(id) {
     const body = JSON.stringify({ id, type: this.type, payload: this.payload });
@@ -34,9 +37,10 @@ class StorageRequest {
   }
 
   /**
-   * Deserialise a raw response frame from a Buffer.
-   * @param {Buffer} buf - Full frame buffer (including 4-byte length header)
-   * @returns {{ id: number, status: string, data: any, error: string }}
+   * Deserializes a raw response frame Buffer back into a JavaScript object.
+   * Receives a complete frame Buffer including the length header.
+   * Reads the header, extracts the JSON payload, and parses it.
+   * Returns an object containing the response id, status, data, or error message.
    */
   static deserialise(buf) {
     if (buf.length < 4) throw new RangeError('Buffer too short to contain a frame header');
@@ -45,6 +49,12 @@ class StorageRequest {
     return JSON.parse(buf.subarray(4, 4 + len).toString('utf8'));
   }
 
+  /**
+   * Returns a string representation of the request.
+   * Takes no arguments.
+   * Formats the request type and timestamp for debugging purposes.
+   * Returns a formatted descriptive string.
+   */
   toString() {
     return `StorageRequest(${this.type}) @ ${this.createdAt}`;
   }

@@ -16,6 +16,12 @@ const MODELS = [
 ];
 
 class GeminiBot {
+  /**
+   * Initializes the GeminiBot service.
+   * Gets an API key string.
+   * Configures the GoogleGenerativeAI instance if the key is valid, otherwise disables the bot.
+   * Returns the initialized bot object.
+   */
   constructor(apiKey) {
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
       this.enabled = false;
@@ -27,6 +33,12 @@ class GeminiBot {
     console.log('[KickBot] Ready ⚽');
   }
 
+  /**
+   * Sends a user question to the Gemini API and retrieves an AI response.
+   * Receives the question string.
+   * Iterates through fallback models attempting to generate content based on the SYSTEM_PROMPT.
+   * Returns the generated answer string, or an error/unavailable message if all models fail.
+   */
   async ask(question) {
     if (!this.enabled) {
       return 'KickBot is not configured. Add GEMINI_API_KEY to the root .env file.';

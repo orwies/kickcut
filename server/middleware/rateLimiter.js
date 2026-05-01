@@ -6,8 +6,10 @@ const rateLimit = require('express-rate-limit');
 
 
 /**
- * Strict limiter for auth endpoints (login / register).
- * Prevents brute-force attacks.
+ * Strict Express rate limiter middleware for authentication endpoints.
+ * Takes no arguments natively (configured via express-rate-limit).
+ * Caps traffic to 10 requests per 15-minute window per IP to thwart brute-force cracking.
+ * Returns the middleware function to be injected into routes.
  */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15-minute window
@@ -19,7 +21,10 @@ const loginLimiter = rateLimit({
 });
 
 /**
- * General API rate limiter.
+ * Relaxed Express rate limiter middleware for general API endpoints.
+ * Takes no arguments natively (configured via express-rate-limit).
+ * Caps traffic to 120 requests per minute to prevent accidental spamming while allowing high usage.
+ * Returns the middleware function to be injected into routes.
  */
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute

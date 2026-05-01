@@ -7,7 +7,12 @@ const COMPETITIONS = [
   'Ligue 1', 'Champions League', 'Europa League', 'World Cup', 'Other',
 ];
 
-// Modal form for uploading highlight videos and thumbnails to the server.
+/**
+ * Modal form component for uploading highlight videos and thumbnails.
+ * Receives 'onClose' to close the modal, 'onSuccess' for post-upload refresh, and 'showToast' for notifications.
+ * Manages form state, file selections, and submission logic via a controlled component architecture.
+ * Returns the JSX elements for the complete upload modal overlay.
+ */
 export default function UploadForm({ onClose, onSuccess, showToast }) {
   const [form, setForm] = useState({
     homeTeam: '', awayTeam: '', competition: COMPETITIONS[0], matchStage: '',
@@ -19,10 +24,22 @@ export default function UploadForm({ onClose, onSuccess, showToast }) {
   const videoRef = useRef();
   const thumbRef = useRef();
 
+  /**
+   * Updates a specific field within the highlight upload form state.
+   * Receives the 'field' name string and its new 'value'.
+   * Merges the new value into the existing form object state to maintain other inputs.
+   * Returns nothing.
+   */
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  /**
+   * Handles the submission of the upload form.
+   * Receives the form submission event 'e'.
+   * Prevents default reload, validates required fields, appends text and file data to a FormData object, and triggers the API upload.
+   * Returns nothing, but executes callbacks on success or failure.
+   */
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.homeTeam || !form.awayTeam || !form.date) {

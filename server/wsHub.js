@@ -17,7 +17,12 @@ let _wss = null;
 let _pool = null;
 let _bot = null;
 
-// Starts the WebSocket server and sets up the connection logic and bot integration.
+/**
+ * Initializes the WebSocket hub, binding to the HTTPS server and worker pool.
+ * Receives the 'httpsServer' instance and the 'pool' of background database workers.
+ * Sets up WebSocket endpoints, connection events, token validation, and the heartbeat interval.
+ * Returns nothing.
+ */
 function init(httpsServer, pool) {
   _pool = pool;
   _bot = new GeminiBot(process.env.GEMINI_API_KEY);
@@ -136,12 +141,22 @@ function init(httpsServer, pool) {
   console.log('[WS] WebSocket hub initialised on /ws');
 }
 
-// Sends a JSON message to a specific WebSocket client.
+/**
+ * Sends a JSON payload directly to a specific connected client.
+ * Receives the target 'ws' client, a message 'type' string, and 'data' object.
+ * Checks if the socket is open before stringifying and dispatching the payload.
+ * Returns nothing.
+ */
 function sendTo(ws, type, data) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type, data }));
 }
 
-// Sends a message to all connected clients in a specific channel.
+/**
+ * Broadcasts a message to all connected clients in a specific channel.
+ * Receives a message 'type' string, the 'data' object, and the 'channelId'.
+ * Validates channel existence dynamically before iterating over all clients and emitting the JSON.
+ * Returns nothing.
+ */
 function broadcast(type, data, channelId) {
   if (!_wss) return;
   const msg = JSON.stringify({ type, data });
@@ -159,10 +174,19 @@ function broadcast(type, data, channelId) {
   });
 }
 
-// Returns the number of currently active WebSocket connections.
+/**
+ * Retrieves the total number of currently active WebSocket clients.
+ * Takes no arguments.
+ * Returns the integer size of the active clients Set (or 0 if uninitialized).
+ */
 function getConnectedCount() { return _wss ? _wss.clients.size : 0; }
 
-// Broadcasts the list of currently online usernames and roles to all clients.
+/**
+ * Broadcasts the list of currently online users to all clients.
+ * Takes no arguments.
+ * Aggregates unique users from active sockets into a map, then blasts the array to everyone.
+ * Returns nothing.
+ */
 function broadcastOnlineUsers() {
   if (!_wss) return;
   const usersMap = new Map();
@@ -179,10 +203,11 @@ function broadcastOnlineUsers() {
 }
 
 /**
- * Close any open WebSocket connection belonging to userId.
- * Called when a new login supersedes an existing session.
+ * Forcefully terminates a user's WebSocket connections.
+ * Receives the 'userId' to kick and a 'reason' string.
+ * Dispatches a force_logout warning to the client, then terminates the socket to free resources.
+ * Returns nothing.
  */
-// Forcefully disconnects a user, typically when a new login session starts elsewhere.
 function kickUser(userId, reason) {
   if (!_wss) return;
   _wss.clients.forEach((c) => {

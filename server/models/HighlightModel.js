@@ -5,7 +5,10 @@
 
 class HighlightModel {
   /**
-   * @param {object} doc - Raw highlight document
+   * Constructs a new HighlightModel value object.
+   * Receives a raw 'doc' object representing a database highlight.
+   * Normalizes strings, parses scores, defaults missing fields, and sets creation dates.
+   * Returns the constructed HighlightModel instance.
    */
   constructor({
     _id,
@@ -39,8 +42,10 @@ class HighlightModel {
   }
 
   /**
-   * Validate highlight fields. Throws on invalid data.
-   * @returns {true}
+   * Validates the core fields of the highlight object before database storage.
+   * Takes no arguments.
+   * Checks for required properties, ensures the date is valid, and prevents negative scores.
+   * Returns true if validation passes, otherwise throws an Error with details.
    */
   validate() {
     if (!this.homeTeam) throw new Error('HighlightModel: homeTeam is required');
@@ -55,8 +60,10 @@ class HighlightModel {
   }
 
   /**
-   * Serialise to a plain object suitable for storage.
-   * @returns {object}
+   * Serializes the model back into a plain JavaScript object.
+   * Takes no arguments.
+   * Extracts only the necessary data properties, discarding prototype methods or internal state.
+   * Returns a clean object suitable for inserting into MongoDB.
    */
   toObject() {
     return {
@@ -75,9 +82,10 @@ class HighlightModel {
   }
 
   /**
-   * Construct a HighlightModel from a raw MongoDB document.
-   * @param {object} doc
-   * @returns {HighlightModel}
+   * Factory method to construct a HighlightModel from a raw MongoDB document.
+   * Receives the raw 'doc' object from the database query.
+   * Instantiates and returns a new HighlightModel passing in the data.
+   * Returns the newly created model instance.
    */
   static fromDoc(doc) {
     return new HighlightModel(doc);

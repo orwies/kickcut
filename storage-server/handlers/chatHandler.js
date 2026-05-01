@@ -6,10 +6,11 @@
 const { ChatMessage, Channel } = require('../db/schemas');
 
 /**
- * Strips the Mongoose wrapper from a document (or array of documents) and
- * converts ObjectId _id fields to plain strings so they can be sent over TCP.
+ * Standardizes MongoDB documents into plain JSON objects for consistent TCP delivery.
+ * Receives a Mongoose 'doc' or an array of documents.
+ * Extracts the raw object and converts the ObjectId '_id' into a standard string.
+ * Returns the serializable plain JavaScript object.
  */
-// Standardizes MongoDB documents into plain JSON objects for consistent TCP delivery.
 function serialize(doc) {
   if (!doc) return doc;
   if (Array.isArray(doc)) return doc.map(serialize);
@@ -18,7 +19,12 @@ function serialize(doc) {
   return obj;
 }
 
-// Orchestrates chat-related DB actions like messaging, channel creation, and deletion.
+/**
+ * Orchestrates chat-related database operations based on incoming RPC requests.
+ * Receives an action 'type' string and a 'payload' data object.
+ * Routes the command to the appropriate Mongoose model to create messages, fetch history, or manage channels.
+ * Returns a Promise resolving to the requested database record(s) or execution confirmation.
+ */
 async function handleChatRequest(type, payload) {
   switch (type) {
 

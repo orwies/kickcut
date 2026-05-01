@@ -8,6 +8,12 @@ const { randomUUID } = require('crypto');
 const os = require('os');
 
 class WorkerPool {
+  /**
+   * Constructs a new WorkerPool instance to manage background threads.
+   * Receives 'workerScript' path, 'sharedData' context, and pool 'size'.
+   * Pre-allocates worker threads, sets up internal queuing, and binds IPC listeners.
+   * Returns the initialized WorkerPool instance.
+   */
   constructor(workerScript, sharedData, size) {
     this.workerScript = workerScript;
     this.sharedData = sharedData;
@@ -23,10 +29,11 @@ class WorkerPool {
   }
 
   /**
-   * Dispatch an action to an available worker thread.
-   * Includes a 30-second timeout so requests never hang forever.
+   * Dispatches an action payload to the next available worker thread.
+   * Receives the 'action' name string and optional 'payload' data.
+   * Routes the job to an idle thread or pushes it to the backlog queue. Implements a 30s timeout.
+   * Returns a Promise that resolves with the worker's output or rejects on error.
    */
-// Sends a request to an available worker thread and returns a promise for the result.
   dispatch(action, payload = {}) {
     return new Promise((resolve, reject) => {
       const taskId = randomUUID();
@@ -57,7 +64,12 @@ class WorkerPool {
     });
   }
 
-// Creates a new worker thread and sets up its lifecycle listeners for results and errors.
+  /**
+   * Instantiates a new worker thread and attaches lifecycle listeners.
+   * Receives the 'id' index for the thread.
+   * Configures error/exit handling to ensure auto-respawning if the thread crashes.
+   * Returns nothing, but mutates the internal _workers array.
+   */
   _spawnWorker(id) {
     const thread = new Worker(this.workerScript, {
       workerData: { ...this.sharedData, WORKER_ID: id },
@@ -98,13 +110,23 @@ class WorkerPool {
     });
   }
 
-// Removes a dead or erroring worker from the active pool.
+  /**
+   * Purges a dead or erroring worker from the active pool.
+   * Receives the worker 'entry' object reference.
+   * Finds the worker in the internal array and splices it out.
+   * Returns nothing.
+   */
   _removeWorker(entry) {
     const idx = this._workers.indexOf(entry);
     if (idx !== -1) this._workers.splice(idx, 1);
   }
 
-// Picks the next task from the backlog and assigns it to a newly freed worker.
+  /**
+   * Polls the backlog queue and assigns the next task to an idle worker.
+   * Takes no arguments.
+   * Automatically executes whenever a worker finishes a job to keep throughput moving.
+   * Returns nothing.
+   */
   _drainQueue() {
     if (this._queue.length === 0) return;
     const idle = this._workers.find((w) => !w.busy);
