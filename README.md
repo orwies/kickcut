@@ -41,13 +41,12 @@ npm run setup
 **Step 2 – Add your Secrets**:
 Open the new `.env` files and paste in your `MONGO_URI` and `GEMINI_API_KEY`.
 
-**Step 3 – Start the Servers**:
-In three separate terminals, run:
+**Step 3 – Start the Environment**:
+Double-click the `start_dev.bat` file in your project folder, or run it from the terminal:
 ```powershell
-npm run dev:storage
-npm run dev:server
-npm run dev:client
+.\start_dev.bat
 ```
+*(This will automatically launch the storage server, main server, and client UI in separate windows).*
 
 ## Usage
 

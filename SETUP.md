@@ -47,37 +47,20 @@ Open the newly created `.env` files and add your private keys:
 
 ## Running the Project
 
-You need **3 terminals open at the same time** (from the root `kickcut` folder):
+You no longer need to open 3 separate terminals manually!
 
-### Terminal 1 – Storage Server
+Just double-click the **`start_dev.bat`** file located in the root `kickcut` folder, or run it from the terminal:
+
 ```powershell
-npm run dev:storage
-```
-✅ Expected output:
-```
-[MongoDB] Connected to <your-mongo-uri>
-[Storage] Admin account created → username: orwies
-[Storage] TCP server listening on 127.0.0.1:9000
+.\start_dev.bat
 ```
 
-### Terminal 2 – Main Server
-```powershell
-npm run dev:server
-```
-✅ Expected output:
-```
-[Server] HTTPS + WSS listening on https://localhost:3443
-[WorkerPool] Spawned 4 worker threads
-```
+This automated script will:
+1. Launch the **Storage Server** and wait for it to connect to MongoDB.
+2. Launch the **Main Server** (HTTPS + WSS).
+3. Launch the **React Client** UI.
 
-### Terminal 3 – React Client
-```powershell
-npm run dev:client
-```
-✅ Expected output:
-```
-  ➜  Local:   http://localhost:5173/
-```
+Each service will open in its own separate terminal window so you can easily view their individual logs.
 
 ### Open the app
 Go to: **https://localhost:5173** (Note: you may need to bypass the browser's "Not Secure" warning since we use self-signed certificates for local development).

@@ -33,7 +33,14 @@ class GeminiBot {
     const baseDelay = 1000;
     
     // Ordered list of models — preferred first. 2.5 Flash is the current free-tier model.
-    const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    const fallbackModels = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-1.0-pro',
+      'gemini-pro'
+    ];
 
     for (const modelName of fallbackModels) {
       const activeModel = this.genAI.getGenerativeModel({
@@ -49,12 +56,9 @@ class GeminiBot {
           const msg = err.message || '';
           console.warn(`[KickBot] Attempt ${attempt} failed with ${modelName}:`, msg);
 
-          // If quota exceeded or not found for this specific model, don't retry, just failover to next model
-          if (msg.includes('429') && msg.includes('Quota exceeded')) {
+          // If quota exceeded, rate limited (429), or model not found (404), failover to next model
+          if (msg.includes('429') || msg.includes('404') || msg.includes('Quota') || msg.includes('exhausted')) {
              break; // breaks out of retry loop, moves to next model
-          }
-          if (msg.includes('404')) {
-             break;
           }
 
           // If it's a 503 or transient error, retry with exponential backoff
